@@ -375,6 +375,31 @@ Module 12 — Deployment Readiness and Final Documentation Support
 
 ---
 
+## First Admin Seed
+
+The first protected admin account is created through a backend-only Convex seed action. Store these values as Convex environment variables, not in the local app `.env.local` file:
+
+```txt
+BETTER_AUTH_SECRET
+BETTER_AUTH_URL
+ADMIN_EMAIL
+ADMIN_PASSWORD
+ADMIN_NAME
+ADMIN_SEED_KEY
+```
+
+Run the seed action with the configured seed key:
+
+```bash
+npx convex run auth/bootstrapFirstAdmin:bootstrapFirstAdmin '{"seedKey":"<ADMIN_SEED_KEY>"}'
+```
+
+After the first admin has been created, rotate or remove `ADMIN_SEED_KEY` from Convex environment variables.
+
+Do not store Better Auth secrets, admin passwords, or seed keys in the local app repository.
+
+---
+
 ## Visual Identity
 
 The interface should feel:

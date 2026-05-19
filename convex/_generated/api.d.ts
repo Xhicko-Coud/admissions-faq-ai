@@ -9,6 +9,9 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as auth_authorization from "../auth/authorization.js";
+import type * as auth_bootstrapFirstAdmin from "../auth/bootstrapFirstAdmin.js";
+import type * as auth_bootstrapFirstAdminInternal from "../auth/bootstrapFirstAdminInternal.js";
 import type * as health from "../health.js";
 import type * as http from "../http.js";
 
@@ -20,6 +23,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  "auth/authorization": typeof auth_authorization;
+  "auth/bootstrapFirstAdmin": typeof auth_bootstrapFirstAdmin;
+  "auth/bootstrapFirstAdminInternal": typeof auth_bootstrapFirstAdminInternal;
   health: typeof health;
   http: typeof http;
 }>;

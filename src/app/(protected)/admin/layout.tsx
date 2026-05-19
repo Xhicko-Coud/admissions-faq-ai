@@ -23,9 +23,16 @@ export default async function AdminLayout({
     redirect("/login?reason=session-required");
   }
 
+  if (
+    sessionStatus.status === "missing_profile" ||
+    sessionStatus.status === "inactive"
+  ) {
+    redirect("/login?reason=access-denied");
+  }
+
   return (
     <ProtectedProviders>
-      <AppShell>{children}</AppShell>
+      <AppShell profile={sessionStatus.profile}>{children}</AppShell>
     </ProtectedProviders>
   );
 }

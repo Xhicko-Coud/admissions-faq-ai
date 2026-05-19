@@ -7,19 +7,12 @@ import {
 import { AppHeader, type AppHeaderProfile } from "@/components/layout/AppHeader";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 
-const placeholderProfile = {
-  email: "admin@example.edu",
-  name: "Admissions Admin",
-  role: "admin",
-  status: "active",
-} satisfies AppHeaderProfile;
-
 export function AppShell({
   children,
-  profile = placeholderProfile,
+  profile,
 }: Readonly<{
   children: React.ReactNode;
-  profile?: AppHeaderProfile;
+  profile: AppHeaderProfile;
 }>) {
   return (
     <SidebarProvider

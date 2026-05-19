@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { BadgeCheckIcon } from "lucide-react";
 
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { adminNavigation } from "@/config/navigation";
 import {
   Avatar,
@@ -111,6 +112,8 @@ export function AppHeader({
               <BadgeCheckIcon className="size-4" />
               {getRoleLabel(profile.role)}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <SignOutButton />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -131,12 +134,12 @@ function getRoleLabel(role: AppHeaderProfile["role"]) {
 }
 
 function getUserInitials(name: string | null, email: string) {
-  const source = name?.trim() || email.split("@")[0] || "AF";
+  const source = name?.trim() || email.split("@")[0] || "Admin";
   const parts = source.split(/[\s._-]+/).filter(Boolean);
 
   if (parts.length >= 2) {
     return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
   }
 
-  return source.slice(0, 2).toUpperCase() || "AF";
+  return source.slice(0, 2).toUpperCase() || "AD";
 }
