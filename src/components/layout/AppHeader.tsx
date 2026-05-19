@@ -1,8 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { BadgeCheckIcon } from "lucide-react";
 
 import { adminNavigation } from "@/config/navigation";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +15,14 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -18,7 +31,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export function AppHeader() {
+export type AppHeaderProfile = {
+  email: string;
+  name: string | null;
+  role: "admin" | "editor" | "reviewer";
+  status: "active" | "inactive";
+};
+
+export function AppHeader({
+  profile,
+}: {
+  profile: AppHeaderProfile;
+}) {
   const pathname = usePathname();
   const activeItem =
     adminNavigation.find((item) =>
@@ -56,7 +80,63 @@ export function AppHeader() {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="Open account menu"
+              className="cursor-pointer rounded-full p-1 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              type="button"
+            >
+              <Avatar className="bg-primary text-primary-foreground" size="lg">
+                <AvatarFallback className="bg-primary text-sm font-semibold text-primary-foreground">
+                  {getUserInitials(profile.name, profile.email)}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled>
+              <div className="min-w-0">
+                <p className="truncate font-medium text-foreground">
+                  {profile.name || "Admissions Admin"}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {profile.email}
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>
+              <BadgeCheckIcon className="size-4" />
+              {getRoleLabel(profile.role)}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
+}
+
+function getRoleLabel(role: AppHeaderProfile["role"]) {
+  if (role === "admin") {
+    return "Administrator";
+  }
+
+  if (role === "editor") {
+    return "Editor";
+  }
+
+  return "Reviewer";
+}
+
+function getUserInitials(name: string | null, email: string) {
+  const source = name?.trim() || email.split("@")[0] || "AF";
+  const parts = source.split(/[\s._-]+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return source.slice(0, 2).toUpperCase() || "AF";
 }
