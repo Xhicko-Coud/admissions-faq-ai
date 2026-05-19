@@ -1,5 +1,5 @@
-import { DashboardPlaceholder } from "./DashboardPlaceholder";
+import { DashboardView } from "./DashboardView";
 
 export default function DashboardPage() {
-  return <DashboardPlaceholder />;
+  return <DashboardView />;
 }
