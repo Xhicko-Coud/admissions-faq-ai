@@ -78,8 +78,6 @@ export const adminNavigation: NavigationItem[] = [
     label: "Users",
     description: "Internal admin access",
     matchPaths: ["/admin/users"],
-    disabled: true,
-    badge: "Coming soon",
   },
   {
     href: "/admin/settings",

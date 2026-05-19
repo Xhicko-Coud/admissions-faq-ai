@@ -14,6 +14,9 @@ import type * as auth_bootstrapFirstAdmin from "../auth/bootstrapFirstAdmin.js";
 import type * as auth_bootstrapFirstAdminInternal from "../auth/bootstrapFirstAdminInternal.js";
 import type * as health from "../health.js";
 import type * as http from "../http.js";
+import type * as users_createTrustedUser from "../users/createTrustedUser.js";
+import type * as users_createTrustedUserInternal from "../users/createTrustedUserInternal.js";
+import type * as users_queries from "../users/queries.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +31,9 @@ declare const fullApi: ApiFromModules<{
   "auth/bootstrapFirstAdminInternal": typeof auth_bootstrapFirstAdminInternal;
   health: typeof health;
   http: typeof http;
+  "users/createTrustedUser": typeof users_createTrustedUser;
+  "users/createTrustedUserInternal": typeof users_createTrustedUserInternal;
+  "users/queries": typeof users_queries;
 }>;
 
 /**

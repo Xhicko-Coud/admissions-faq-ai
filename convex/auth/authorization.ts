@@ -77,6 +77,10 @@ export async function requireRole(
   throw new ConvexError("Forbidden");
 }
 
+export async function requireActiveAdmin(ctx: QueryCtx) {
+  return await requireRole(ctx, [USER_PROFILE_ROLES.admin]);
+}
+
 export const getAccessStatus = query({
   args: {},
   handler: async (ctx) => {
