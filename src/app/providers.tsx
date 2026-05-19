@@ -1,12 +1,29 @@
 "use client";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { ConvexReactClient } from "convex/react";
 import { useState } from "react";
 
+import { AuthBridgeProvider } from "@/components/providers/AuthBridgeProvider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { authClient } from "@/lib/auth-client";
 
 export function AppProviders({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <AuthBridgeProvider>
+      <NotificationProvider>
+        <TooltipProvider>{children}</TooltipProvider>
+      </NotificationProvider>
+    </AuthBridgeProvider>
+  );
+}
+
+export function ProtectedProviders({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -24,10 +41,8 @@ export function AppProviders({
   });
 
   return (
-    <ConvexProvider client={convex}>
-      <NotificationProvider>
-        <TooltipProvider>{children}</TooltipProvider>
-      </NotificationProvider>
-    </ConvexProvider>
+    <ConvexBetterAuthProvider authClient={authClient} client={convex}>
+      {children}
+    </ConvexBetterAuthProvider>
   );
 }

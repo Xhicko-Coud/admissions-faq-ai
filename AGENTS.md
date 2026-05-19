@@ -530,10 +530,48 @@ Rules:
 5. Recent activity feeds must return safe display fields only.
 6. Secrets must never be hardcoded.
 7. Secrets must never be pasted into chat.
-8. Environment variables must use `.env.local` locally or Convex env where appropriate.
-9. `.env.local.example` must contain empty placeholder values only.
+8. Environment variables must follow the Environment File Rule.
+9. Secret values must live in Convex environment variables when required by Convex or Better Auth backend code.
 10. Do not weaken authentication or authorization for convenience.
 11. Do not expose stack traces or backend internals to users.
+
+---
+
+# 8.1 Environment File Rule
+
+Never create `.env.local.example`.
+
+Never update `.env.local.example`.
+
+Never suggest creating `.env.local.example`.
+
+The local app repo `.env.local` must only contain:
+
+```bash
+CONVEX_DEPLOYMENT=
+NEXT_PUBLIC_CONVEX_URL=
+NEXT_PUBLIC_CONVEX_SITE_URL=
+NEXT_PUBLIC_SITE_URL=
+```
+
+Convex and Better Auth sensitive variables must be stored in Convex environment variables, not in the local app repo `.env.local`.
+
+Examples of Convex environment variables:
+
+```bash
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+ADMIN_NAME=
+ADMIN_SEED_KEY=
+```
+
+Do not print values from `.env.local`.
+
+Do not print values from Convex environment variables.
+
+Only report environment variable names, never values.
 
 ---
 

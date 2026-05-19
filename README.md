@@ -485,22 +485,33 @@ npx tsc --noEmit
 
 ## Environment Variables
 
-Environment variables will depend on the completed modules.
+This project does not use `.env.local.example`.
 
-Expected direction:
+Do not create `.env.local.example`.
 
-```txt
+The local `.env.local` should only contain public/local Convex routing values:
+
+```bash
+CONVEX_DEPLOYMENT=
 NEXT_PUBLIC_CONVEX_URL=
 NEXT_PUBLIC_CONVEX_SITE_URL=
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=
+NEXT_PUBLIC_SITE_URL=
 ```
 
-Do not commit real secrets.
+Sensitive Better Auth and Convex values must be configured in Convex environment variables, not in the local app repo `.env.local`.
 
-Use empty placeholders in `.env.local.example`.
+Examples of Convex environment variables:
 
-Generate secrets locally and never paste them into chat.
+```bash
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+ADMIN_NAME=
+ADMIN_SEED_KEY=
+```
+
+Do not commit or print real secret values.
 
 ---
 
