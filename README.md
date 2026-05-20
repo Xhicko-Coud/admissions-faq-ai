@@ -2,7 +2,7 @@
 
 A web-based Conversational AI FAQ system for university admissions support.
 
-The system provides a public admissions FAQ chatbot at `/faq` and a protected admin area for managing FAQ content, categories, users, query logs, unanswered questions, feedback, and dashboard metrics.
+The system provides a public admissions FAQ chatbot at `/` and a protected admin area for managing FAQ content, categories, users, query logs, unanswered questions, feedback, and dashboard metrics.
 
 This project is an academic MVP and software research artifact. It is designed to help prospective students get quick answers from an approved admissions knowledge base. It is not a replacement for official university admissions officers, official portals, or legally binding admissions communication.
 
@@ -22,7 +22,7 @@ The architecture should remain future-safe for embeddings or LLM integration, bu
 
 ### Public Features
 
-* Public FAQ chatbot route at `/faq`
+* Public FAQ chatbot route at `/`
 * Admissions question input
 * Retrieval-based answer matching
 * Safe fallback response for unanswered or low-confidence questions
@@ -273,7 +273,7 @@ Builds the user-facing chatbot route.
 
 Includes:
 
-* public `/faq` route
+* public `/` route
 * chat input
 * answer display
 * loading state
@@ -328,7 +328,7 @@ Includes:
 
 * helpful/not-helpful feedback
 * feedback schema
-* feedback capture from `/faq`
+* feedback capture from `/`
 * admin feedback review
 * FAQ quality improvement signals
 * dashboard feedback metrics

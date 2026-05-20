@@ -6,5 +6,5 @@ export const siteConfig = {
     "A conversational FAQ system for university admissions support.",
   dashboardRoute: "/admin/dashboard",
   loginRoute: "/login",
-  publicFaqRoute: "/faq",
+  publicFaqRoute: "/",
 } as const;
