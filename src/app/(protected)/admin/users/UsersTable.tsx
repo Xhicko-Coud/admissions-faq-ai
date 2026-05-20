@@ -65,6 +65,21 @@ export function UsersTable({
       ),
     },
     {
+      id: "source",
+      header: "Source",
+      cell: (user) => (
+        <Badge
+          className={
+            user.isRootAdmin
+              ? "border border-violet-200 bg-violet-100 text-violet-800 shadow-sm hover:bg-violet-100"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-100"
+          }
+        >
+          {user.isRootAdmin ? "Root" : "System"}
+        </Badge>
+      ),
+    },
+    {
       id: "status",
       header: "Status",
       cell: (user) => <StatusBadge status={user.status} />,

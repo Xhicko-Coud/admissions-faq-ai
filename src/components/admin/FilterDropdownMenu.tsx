@@ -81,7 +81,7 @@ export function FilterDropdownMenu({
               <span className="font-medium">Back</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="px-3 py-2 text-sm font-semibold text-foreground">
+            <DropdownMenuLabel className="px-3 py-2 text-sm font-semibold text-violet-700">
               {activeGroup.label}
             </DropdownMenuLabel>
             {activeGroup.options.map((option) => {
@@ -106,7 +106,7 @@ export function FilterDropdownMenu({
           </>
         ) : (
           <>
-            <DropdownMenuLabel className="px-3 py-2 text-sm font-semibold text-foreground">
+            <DropdownMenuLabel className="px-3 py-2 text-sm font-semibold text-violet-700">
               Filters
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

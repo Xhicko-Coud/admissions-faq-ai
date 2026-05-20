@@ -5,8 +5,6 @@ import { FilterDropdownMenu } from "@/components/admin/FilterDropdownMenu";
 import { tableHeaderButtonClassName } from "@/components/admin/tableHeaderButtonStyles";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 import { UsersDialogs } from "./UsersDialogs";
 import { UsersForm } from "./UsersForm";
@@ -18,28 +16,58 @@ type UsersViewProps = ReturnType<typeof useUsersLogic>;
 export function UsersView({
   activeUsers,
   allowOpenCreateSheet,
-  closeDetailSheet,
+  allowOpenEditSheet,
+  changeUserStatus,
+  changeUserRole,
   createUser,
   createUserForm,
+  discardSheetChanges,
+  editUserForm,
   filteredUsers,
   getUserActions,
-  handleCreateSheetOpenChange,
+  handleSheetOpenChange,
   inactiveUsers,
   isCreating,
-  isCreateSheetOpen,
-  isDetailSheetOpen,
+  isCreateMode,
+  isDiscardSheetConfirmOpen,
+  isEditMode,
+  isEditSaveConfirmOpen,
+  isOpenCreateSheetConfirmOpen,
+  isOpenEditSheetConfirmOpen,
+  isRoleUpdating,
   isSaveCreateConfirmOpen,
+  isSheetOpen,
+  isStatusUpdating,
   isTableLoading,
+  isUpdating,
+  isViewMode,
+  currentUserIsRootAdmin,
   pendingCreateSummary,
-  requestSaveCreateSheet,
+  pendingEditSummary,
+  pendingEditUser,
+  pendingRoleUser,
+  pendingStatusUser,
+  requestSaveSheet,
   roleFilter,
-  selectedUser,
+  selectedRole,
+  setIsDiscardSheetConfirmOpen,
+  setIsEditSaveConfirmOpen,
+  setIsOpenCreateSheetConfirmOpen,
+  setIsOpenEditSheetConfirmOpen,
   setIsSaveCreateConfirmOpen,
+  setPendingEditUser,
+  setPendingRoleUser,
+  setPendingStatusUser,
   setRoleFilter,
+  setSelectedRole,
   setStatusFilter,
+  sheetMode,
+  sheetUser,
   statusFilter,
   submitCreateForm,
+  submitEditForm,
   totalUsers,
+  updateUser,
 }: UsersViewProps) {
   const metrics = [
     {
@@ -143,7 +171,7 @@ export function UsersView({
             />
             <Button
               className={tableHeaderButtonClassName}
-              onClick={allowOpenCreateSheet}
+              onClick={() => setIsOpenCreateSheetConfirmOpen(true)}
               size="lg"
               type="button"
             >
@@ -160,113 +188,71 @@ export function UsersView({
       />
 
       <AdminActionSheet
-        cancelText="Cancel"
-        confirmText="Create User"
-        description="Add an internal user who can manage admissions FAQ workflows."
-        isLoading={isCreating}
-        loadingText="Creating user..."
-        onCancel={() => handleCreateSheetOpenChange(false)}
-        onConfirm={requestSaveCreateSheet}
-        onOpenChange={handleCreateSheetOpenChange}
-        open={isCreateSheetOpen}
-        title="Create user"
+        cancelText={isViewMode ? "Close" : "Cancel"}
+        confirmText={isCreateMode ? "Create User" : "Save Changes"}
+        description={
+          isCreateMode
+            ? "Add an internal user who can manage admissions FAQ workflows."
+            : isViewMode
+              ? "Review this user's safe profile fields."
+              : "Update this user's role assignment."
+        }
+        isLoading={isCreateMode ? isCreating : isUpdating}
+        loadingText={isCreateMode ? "Creating user..." : "Saving changes..."}
+        onCancel={() => handleSheetOpenChange(false)}
+        onConfirm={requestSaveSheet}
+        onOpenChange={handleSheetOpenChange}
+        open={isSheetOpen}
+        showConfirmButton={!isViewMode}
+        title={
+          isCreateMode ? "Create user" : isViewMode ? "View user" : "Edit user"
+        }
       >
         <UsersForm
           createForm={createUserForm}
+          editForm={editUserForm}
           onCreateSubmit={submitCreateForm}
+          onEditSubmit={submitEditForm}
+          showAdminRoleOption={currentUserIsRootAdmin}
+          sheetMode={sheetMode}
+          sheetUser={sheetUser}
         />
       </AdminActionSheet>
 
-      <AdminActionSheet
-        cancelText="Close"
-        description="Review safe profile fields for this internal user."
-        onCancel={closeDetailSheet}
-        onConfirm={closeDetailSheet}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeDetailSheet();
-          }
-        }}
-        open={isDetailSheetOpen}
-        showConfirmButton={false}
-        title="User details"
-      >
-        {selectedUser ? (
-          <form className="grid gap-5 py-4">
-            <DetailField
-              id="view-user-name"
-              label="Full Name"
-              value={selectedUser.name || "Unnamed user"}
-            />
-            <DetailField
-              id="view-user-email"
-              label="Email Address"
-              type="email"
-              value={selectedUser.email}
-            />
-            <DetailField
-              id="view-user-role"
-              label="Role"
-              value={formatRoleLabel(selectedUser.role)}
-            />
-            <DetailField
-              id="view-user-status"
-              label="Status"
-              value={selectedUser.status === "active" ? "Active" : "Inactive"}
-            />
-            <DetailField
-              id="view-user-created-at"
-              label="Created At"
-              value={formatDate(selectedUser.createdAt)}
-            />
-            <DetailField
-              id="view-user-updated-at"
-              label="Updated At"
-              value={formatDate(selectedUser.updatedAt)}
-            />
-            <p className="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-xs text-primary/80">
-              Safe workspace details are shown here in read-only mode.
-            </p>
-          </form>
-        ) : null}
-      </AdminActionSheet>
-
       <UsersDialogs
+        allowOpenCreateSheet={allowOpenCreateSheet}
+        allowOpenEditSheet={allowOpenEditSheet}
+        changeUserRole={changeUserRole}
+        changeUserStatus={changeUserStatus}
         createUser={createUser}
+        currentUserIsRootAdmin={currentUserIsRootAdmin}
+        discardSheetChanges={discardSheetChanges}
         isCreating={isCreating}
+        isDiscardSheetConfirmOpen={isDiscardSheetConfirmOpen}
+        isEditSaveConfirmOpen={isEditSaveConfirmOpen}
+        isOpenCreateSheetConfirmOpen={isOpenCreateSheetConfirmOpen}
+        isOpenEditSheetConfirmOpen={isOpenEditSheetConfirmOpen}
+        isRoleUpdating={isRoleUpdating}
         isSaveCreateConfirmOpen={isSaveCreateConfirmOpen}
+        isStatusUpdating={isStatusUpdating}
+        isUpdating={isUpdating}
         pendingCreateSummary={pendingCreateSummary}
+        pendingEditSummary={pendingEditSummary}
+        pendingEditUser={pendingEditUser}
+        pendingRoleUser={pendingRoleUser}
+        pendingStatusUser={pendingStatusUser}
+        selectedRole={selectedRole}
+        setIsDiscardSheetConfirmOpen={setIsDiscardSheetConfirmOpen}
+        setIsEditSaveConfirmOpen={setIsEditSaveConfirmOpen}
+        setIsOpenCreateSheetConfirmOpen={setIsOpenCreateSheetConfirmOpen}
+        setIsOpenEditSheetConfirmOpen={setIsOpenEditSheetConfirmOpen}
         setIsSaveCreateConfirmOpen={setIsSaveCreateConfirmOpen}
+        setPendingEditUser={setPendingEditUser}
+        setPendingRoleUser={setPendingRoleUser}
+        setPendingStatusUser={setPendingStatusUser}
+        setSelectedRole={setSelectedRole}
+        updateUser={updateUser}
       />
     </div>
   );
-}
-
-function DetailField({
-  id,
-  label,
-  type = "text",
-  value,
-}: {
-  id: string;
-  label: string;
-  type?: string;
-  value: string;
-}) {
-  return (
-    <div className="grid gap-1.5">
-      <Label className="text-sm font-medium text-primary" htmlFor={id}>
-        {label}
-      </Label>
-      <Input disabled id={id} readOnly type={type} value={value} />
-    </div>
-  );
-}
-
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }

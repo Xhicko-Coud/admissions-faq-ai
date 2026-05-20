@@ -16,6 +16,7 @@ import type * as health from "../health.js";
 import type * as http from "../http.js";
 import type * as users_createTrustedUser from "../users/createTrustedUser.js";
 import type * as users_createTrustedUserInternal from "../users/createTrustedUserInternal.js";
+import type * as users_operations from "../users/operations.js";
 import type * as users_queries from "../users/queries.js";
 
 import type {
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "users/createTrustedUser": typeof users_createTrustedUser;
   "users/createTrustedUserInternal": typeof users_createTrustedUserInternal;
+  "users/operations": typeof users_operations;
   "users/queries": typeof users_queries;
 }>;
 

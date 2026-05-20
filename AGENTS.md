@@ -141,6 +141,37 @@ If a Compact Mode task becomes complex, switch to Strict Mode and explain why.
 
 ---
 
+# 2.3 Agent Command Execution Rule
+
+The agent must not run terminal commands in this repository.
+
+Forbidden commands include, but are not limited to:
+
+* codegen commands
+* Convex commands
+* TypeScript checks
+* lint/build/dev commands
+* package install commands
+* Git commands
+* shell commands of any kind
+
+The user will run all commands manually.
+
+If a command is needed, the agent must stop and tell the user exactly what to run manually.
+
+Verification must be reported as:
+
+```txt
+Verification not run by agent.
+User should run: npx tsc --noEmit
+```
+
+If Convex generated files may need updating, report the required Convex command for the user to run manually.
+
+The agent must never claim verification passed unless the user reports that it passed.
+
+---
+
 # 3. Read Order
 
 For every task:
@@ -994,7 +1025,6 @@ Rules:
 6. Prefer reuse and adaptation over invention.
 7. Do not create duplicate shared components when a reference-compatible pattern already exists.
 8. When a prompt says “use the reference project,” the agent must inspect the relevant AcadThreat files before implementing.
-
 
 ## Visual Identity Rule
 
@@ -2071,20 +2101,37 @@ Not allowed:
 * LLM integration
 * public registration
 
----
+## RAG Architecture Rule
+
+The admissions-faq-ai chatbot uses a retrieval-augmented architecture.
+
+TF-IDF and cosine similarity are responsible for retrieving relevant school-specific admissions content.
+
+The Groq LLM is responsible for generating a natural conversational response from the retrieved context.
+
+The LLM must not answer from general knowledge when retrieved admissions context is weak or unavailable.
+
+If retrieval confidence is low, the system must return a safe fallback response and log the question for review.
+
+Groq API keys and model settings must be stored in Convex environment variables, not in `.env.local`.
+
+The local `.env.local` must remain limited to:
+
+    CONVEX_DEPLOYMENT=
+    NEXT_PUBLIC_CONVEX_URL=
+    NEXT_PUBLIC_CONVEX_SITE_URL=
+    NEXT_PUBLIC_SITE_URL=
+
+Do not create `.env.local.example`.
+
+Do not call Groq directly from the browser.
+
+All Groq calls must happen through backend/server-side code, preferably a Convex action or an approved backend route.
+
+The response should optionally include source references from retrieved snippets when implemented.
+
+Do not claim that the chatbot is fully autonomous, policy-authoritative, or guaranteed correct.
 
 # END
 
-<!-- convex-ai-start -->
-
-This project uses [Convex](https://convex.dev) as its backend.
-
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
-
-<!-- convex-ai-end -->
+<!-- convex-ai-start --

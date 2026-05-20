@@ -28,7 +28,10 @@ export const getTrustedUserCreationAccess = internalQuery({
       return { status: "forbidden" } as const;
     }
 
-    return { status: "allowed" } as const;
+    return {
+      isRootAdmin: profile.isRootAdmin === true,
+      status: "allowed",
+    } as const;
   },
 });
 
@@ -77,7 +80,9 @@ export const createTrustedUserProfile = internalMutation({
     const now = Date.now();
     const profileId = await ctx.db.insert("userProfiles", {
       createdAt: now,
+      createdBySystem: false,
       email: args.email,
+      isRootAdmin: false,
       name: args.name,
       role: args.role,
       status: USER_PROFILE_STATUSES.active,

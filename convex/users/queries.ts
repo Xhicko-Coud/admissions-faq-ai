@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
 import {
   getCurrentAuthUser,
   requireActiveAdmin,
@@ -10,9 +11,11 @@ import {
 const USER_LIST_LIMIT = 100;
 
 function toSafeUserProfile(profile: {
-  _id: string;
+  _id: Id<"userProfiles">;
   createdAt: number;
+  createdBySystem?: boolean;
   email: string;
+  isRootAdmin?: boolean;
   name?: string;
   role: "admin" | "editor" | "reviewer";
   status: "active" | "inactive";
@@ -20,8 +23,10 @@ function toSafeUserProfile(profile: {
 }) {
   return {
     createdAt: profile.createdAt,
+    createdBySystem: profile.createdBySystem === true,
     email: profile.email,
     id: profile._id,
+    isRootAdmin: profile.isRootAdmin === true,
     name: profile.name ?? null,
     role: profile.role,
     status: profile.status,
@@ -69,6 +74,10 @@ export const listUsers = query({
     const profiles = await ctx.db.query("userProfiles").take(USER_LIST_LIMIT);
 
     return {
+      currentUser: {
+        id: actorProfile._id,
+        isRootAdmin: actorProfile.isRootAdmin === true,
+      },
       status: "success",
       users: profiles
         .slice()

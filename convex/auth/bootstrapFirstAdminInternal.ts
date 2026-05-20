@@ -52,7 +52,9 @@ export const createAdminProfile = internalMutation({
 
     await ctx.db.insert("userProfiles", {
       createdAt: now,
+      createdBySystem: true,
       email: args.email,
+      isRootAdmin: true,
       name: args.name,
       role: USER_PROFILE_ROLES.admin,
       status: USER_PROFILE_STATUSES.active,
@@ -61,6 +63,44 @@ export const createAdminProfile = internalMutation({
     });
 
     return { status: "created" } as const;
+  },
+});
+
+export const ensureRootAdminProfile = internalMutation({
+  args: {
+    profileId: v.id("userProfiles"),
+  },
+  handler: async (ctx, args) => {
+    const targetProfile = await ctx.db.get(args.profileId);
+
+    if (!targetProfile) {
+      return { status: "missing_profile" } as const;
+    }
+
+    const existingRootProfiles = await ctx.db
+      .query("userProfiles")
+      .collect();
+
+    await Promise.all(
+      existingRootProfiles
+        .filter((profile) => profile._id !== args.profileId && profile.isRootAdmin)
+        .map((profile) =>
+          ctx.db.patch(profile._id, {
+            isRootAdmin: false,
+            updatedAt: Date.now(),
+          }),
+        ),
+    );
+
+    await ctx.db.patch(args.profileId, {
+      createdBySystem: true,
+      isRootAdmin: true,
+      role: USER_PROFILE_ROLES.admin,
+      status: USER_PROFILE_STATUSES.active,
+      updatedAt: Date.now(),
+    });
+
+    return { status: "updated" } as const;
   },
 });
 

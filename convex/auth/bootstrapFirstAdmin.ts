@@ -149,6 +149,13 @@ export const bootstrapFirstAdmin = action({
         return { status: "auth_user_exists" } as const;
       }
 
+      await ctx.runMutation(
+        internal.auth.bootstrapFirstAdminInternal.ensureRootAdminProfile,
+        {
+          profileId: existingProfile._id,
+        },
+      );
+
       if (existingProfile.userId === existingAuthUser._id) {
         return { status: "already_seeded" } as const;
       }

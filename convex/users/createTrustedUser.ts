@@ -27,6 +27,7 @@ type CreateTrustedUserResult =
         | "failed"
         | "forbidden"
         | "invalid_input"
+        | "root_required"
         | "unauthenticated";
     };
 type CreateTrustedUserProfileResult =
@@ -82,6 +83,10 @@ export const createTrustedUser = action({
 
     if (access.status !== "allowed") {
       return { status: "forbidden" } as const;
+    }
+
+    if (args.role === USER_PROFILE_ROLES.admin && !access.isRootAdmin) {
+      return { status: "root_required" } as const;
     }
 
     const existingProfile = await ctx.runQuery(
