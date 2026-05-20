@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+import { categoryStatusValidator } from "./categories/types";
 import {
   knowledgeEntryStatusValidator,
   knowledgeEntryTypeValidator,
@@ -26,8 +27,27 @@ export default defineSchema({
     .index("by_role", ["role"])
     .index("by_status", ["status"])
     .index("by_userId", ["userId"]),
+  categories: defineTable({
+    archivedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    createdBy: v.string(),
+    description: v.optional(v.string()),
+    displayOrder: v.optional(v.number()),
+    name: v.string(),
+    slug: v.string(),
+    status: categoryStatusValidator,
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+  })
+    .index("by_status", ["status"])
+    .index("by_name", ["name"])
+    .index("by_slug", ["slug"])
+    .index("by_displayOrder", ["displayOrder"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_updatedAt", ["updatedAt"]),
   knowledgeEntries: defineTable({
     answer: v.optional(v.string()),
+    categoryId: v.optional(v.id("categories")),
     content: v.optional(v.string()),
     createdAt: v.number(),
     createdBy: v.string(),
@@ -43,6 +63,7 @@ export default defineSchema({
     updatedAt: v.number(),
     updatedBy: v.string(),
   })
+    .index("by_categoryId", ["categoryId"])
     .index("by_status", ["status"])
     .index("by_type", ["type"])
     .index("by_status_type", ["status", "type"])
