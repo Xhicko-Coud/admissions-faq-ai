@@ -255,7 +255,12 @@ export function KnowledgeForm({
         />
         {errors.question ? (
           <p className="text-sm text-destructive">{errors.question.message}</p>
-        ) : null}
+        ) : (
+          <p className="text-xs leading-5 text-muted-foreground">
+            Use a natural student question where possible. Search indexing is
+            generated automatically from this question and the entry content.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-1.5">
@@ -302,7 +307,12 @@ export function KnowledgeForm({
         />
         {errors.keywords ? (
           <p className="text-sm text-destructive">{errors.keywords.message}</p>
-        ) : null}
+        ) : (
+          <p className="text-xs leading-5 text-muted-foreground">
+            Optional comma-separated terms. Full-text search also uses the title,
+            question, answer, content, and source label.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-1.5">
@@ -342,8 +352,8 @@ export function KnowledgeForm({
 
       <p className="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-xs text-primary/80">
         {isCreateMode
-          ? "New entries are created as draft content for later review and publishing."
-          : "Status is preserved during editing. Publishing and archiving are handled separately."}
+          ? "New entries are created as draft content for later review and publishing. Generated retrieval fields are handled by the backend."
+          : "Status is preserved during editing. Publishing, archiving, and generated retrieval fields are handled separately."}
       </p>
 
       <button className="hidden" type="submit" />

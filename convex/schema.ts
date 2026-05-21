@@ -57,6 +57,7 @@ export default defineSchema({
     publishedAt: v.optional(v.number()),
     archivedAt: v.optional(v.number()),
     question: v.optional(v.string()),
+    searchText: v.string(),
     sourceLabel: v.optional(v.string()),
     sourceUrl: v.optional(v.string()),
     status: knowledgeEntryStatusValidator,
@@ -70,5 +71,9 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_status_type", ["status", "type"])
     .index("by_createdAt", ["createdAt"])
-    .index("by_updatedAt", ["updatedAt"]),
+    .index("by_updatedAt", ["updatedAt"])
+    .searchIndex("search_text", {
+      searchField: "searchText",
+      filterFields: ["status", "type"],
+    }),
 });

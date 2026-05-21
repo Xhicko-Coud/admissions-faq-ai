@@ -14,6 +14,7 @@ import {
   normalizeCategorySlug,
 } from "../../categories/helpers";
 import { KNOWLEDGE_ENTRY_STATUSES } from "../../knowledge/types";
+import { buildKnowledgeSearchText } from "../../knowledge/helpers";
 import {
   nsukAdmissionSeedData,
   nsukCategoriesSeed,
@@ -27,6 +28,7 @@ import {
   validateNsukSeedCategories,
 } from "./categories";
 import {
+  buildNsukProgrammeListKnowledgePayload,
   dedupeTrimmedStrings,
   mapNsukProgrammeToKnowledgePayload,
 } from "./helpers";
@@ -142,7 +144,7 @@ export const importNsukProgrammeRequirements = mutation({
 
     const resolution = await resolveNsukCategoryIdsBySlug(
       ctx,
-      categoryValidation.normalizedCategorySlugs,
+      categoryValidation.categories,
     );
 
     if (resolution.status === "blocked") {
@@ -234,9 +236,13 @@ async function planNsukCategoryImport(ctx: MutationCtx) {
       normalizedName,
     });
 
-    if (duplicateByName && duplicateByName.slug !== normalizedSlug) {
+    if (
+      duplicateByName &&
+      duplicateByName.slug !== normalizedSlug &&
+      duplicateByName.status !== CATEGORY_STATUSES.active
+    ) {
       conflicts.push(
-        `Category name "${normalizedName}" conflicts with existing slug "${duplicateByName.slug}".`,
+        `Category name "${normalizedName}" conflicts with non-active existing slug "${duplicateByName.slug}".`,
       );
       continue;
     }
@@ -276,8 +282,7 @@ async function planNsukKnowledgeImport(ctx: MutationCtx) {
   let toSkip = 0;
   let toUpdate = 0;
 
-  for (const record of nsukProgrammeRequirementsSeed) {
-    const payload = mapNsukProgrammeToImportPayload(record, warnings);
+  for (const payload of buildNsukKnowledgeImportPayloads(warnings)) {
 
     if (!isValidImportPayload(payload)) {
       invalidRecords += 1;
@@ -332,15 +337,14 @@ async function importNsukKnowledgeEntries(
   let skipped = 0;
   let updated = 0;
 
-  for (const record of nsukProgrammeRequirementsSeed) {
-    const payload = mapNsukProgrammeToImportPayload(record, warnings);
+  for (const payload of buildNsukKnowledgeImportPayloads(warnings)) {
     const categoryId = getNsukCategoryIdFromMap(args.categoryMap, payload.categorySlug);
 
     if (!categoryId || !isValidImportPayload(payload)) {
       invalidRecords += 1;
       skipped += 1;
       warnings.push(
-        `Programme "${record.programme}" could not be imported because its category or required fields are invalid.`,
+        `Knowledge entry "${payload.title}" could not be imported because its category or required fields are invalid.`,
       );
       continue;
     }
@@ -416,6 +420,7 @@ async function createNsukKnowledgeEntry(
     metadata: args.payload.metadata,
     publishedAt,
     question: args.payload.question,
+    searchText: buildKnowledgeSearchText(args.payload),
     sourceLabel: args.payload.sourceLabel,
     status: args.payload.status,
     title: args.payload.title,
@@ -452,6 +457,7 @@ async function updateNsukKnowledgeEntry(
     metadata: args.payload.metadata,
     publishedAt: nextPublishedAt,
     question: args.payload.question,
+    searchText: buildKnowledgeSearchText(args.payload),
     sourceLabel: args.payload.sourceLabel,
     status: args.payload.status,
     title: args.payload.title,
@@ -468,16 +474,50 @@ function mapNsukProgrammeToImportPayload(
   warnings: string[],
 ) {
   const payload = mapNsukProgrammeToKnowledgePayload(record);
-  const keywords = dedupeTrimmedStrings(payload.keywords);
+  return limitNsukImportKeywords({
+    payload,
+    warningLabel: `Programme "${record.programme}"`,
+    warnings,
+  });
+}
+
+function mapNsukProgrammeListToImportPayload(warnings: string[]) {
+  const payload = buildNsukProgrammeListKnowledgePayload({
+    meta: nsukAdmissionSeedData.meta,
+    records: nsukProgrammeRequirementsSeed,
+  });
+
+  return limitNsukImportKeywords({
+    payload,
+    warningLabel: `Knowledge entry "${payload.title}"`,
+    warnings,
+  });
+}
+
+function buildNsukKnowledgeImportPayloads(warnings: string[]) {
+  return [
+    mapNsukProgrammeListToImportPayload(warnings),
+    ...nsukProgrammeRequirementsSeed.map((record) =>
+      mapNsukProgrammeToImportPayload(record, warnings),
+    ),
+  ];
+}
+
+function limitNsukImportKeywords(args: {
+  payload: NsukKnowledgeEntrySeedPayload;
+  warningLabel: string;
+  warnings: string[];
+}) {
+  const keywords = dedupeTrimmedStrings(args.payload.keywords);
 
   if (keywords.length > MAX_IMPORT_KEYWORDS) {
-    warnings.push(
-      `Programme "${record.programme}" keywords were truncated from ${keywords.length} to ${MAX_IMPORT_KEYWORDS}.`,
+    args.warnings.push(
+      `${args.warningLabel} keywords were truncated from ${keywords.length} to ${MAX_IMPORT_KEYWORDS}.`,
     );
   }
 
   return {
-    ...payload,
+    ...args.payload,
     keywords: keywords.slice(0, MAX_IMPORT_KEYWORDS),
   };
 }

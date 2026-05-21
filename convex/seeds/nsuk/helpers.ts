@@ -1,4 +1,7 @@
-import { KNOWLEDGE_ENTRY_STATUSES } from "../../knowledge/types";
+import {
+  KNOWLEDGE_ENTRY_STATUSES,
+  KNOWLEDGE_ENTRY_TYPES,
+} from "../../knowledge/types";
 import type {
   KnowledgeEntryMetadata,
   KnowledgeEntryStatus,
@@ -8,8 +11,15 @@ import type {
   NsukPreparedCategorySeed,
   NsukProgrammeImportIdentity,
   NsukProgrammeRequirementSeedRecord,
+  NsukSeedMeta,
   NsukSeedCategory,
 } from "./types";
+
+const NSUK_PROGRAMME_LIST_SLUG = "nsuk-undergraduate-programmes-list";
+const NSUK_PROGRAMME_LIST_CATEGORY_SLUG = "programme-requirements";
+const NSUK_PROGRAMME_LIST_TITLE = "NSUK Undergraduate Programmes List";
+const NSUK_PROGRAMME_LIST_QUESTION =
+  "What undergraduate programmes are available in NSUK?";
 
 export function mapNsukSeedCategory(
   category: NsukSeedCategory,
@@ -38,6 +48,72 @@ export function mapNsukProgrammeToKnowledgePayload(
     status: getNsukKnowledgeStatus(record),
     title: record.title.trim(),
     type: record.type,
+  };
+}
+
+export function buildNsukProgrammeListKnowledgePayload(args: {
+  meta: NsukSeedMeta;
+  records: readonly NsukProgrammeRequirementSeedRecord[];
+}): NsukKnowledgeEntrySeedPayload {
+  const programmes = getSortedUniqueProgrammes(args.records);
+  const programmeList = programmes.join(", ");
+  const questionVariants = buildNsukProgrammeListQuestionVariants();
+  const sourcePages = Array.from(
+    new Set(args.records.flatMap((record) => record.sourcePages)),
+  ).sort((first, second) => first - second);
+
+  return {
+    answer: [
+      `${args.meta.schoolShortName} has ${programmes.length} undergraduate programmes in this admission source.`,
+      `The programmes include: ${programmeList}.`,
+      "For JAMB and O'Level requirements, ask about a specific programme, for example: \"What JAMB subjects do I need for Computer Science?\"",
+    ].join(" "),
+    categorySlug: NSUK_PROGRAMME_LIST_CATEGORY_SLUG,
+    content: [
+      `School: ${args.meta.school} (${args.meta.schoolShortName})`,
+      `Academic session: ${args.meta.academicSession}`,
+      `Programme count: ${programmes.length}`,
+      "Undergraduate programmes:",
+      ...programmes.map((programme) => `- ${programme}`),
+      "",
+      "This entry lists available undergraduate programmes only. For JAMB subject combinations and O'Level requirements, ask about a specific programme.",
+    ].join("\n"),
+    importIdentity: {
+      academicSession: args.meta.academicSession.trim(),
+      programme: NSUK_PROGRAMME_LIST_TITLE,
+      seedSlug: NSUK_PROGRAMME_LIST_SLUG,
+      sourceLabel: args.meta.sourceLabel.trim(),
+    },
+    keywords: dedupeTrimmedStrings([
+      args.meta.schoolShortName,
+      args.meta.school,
+      "NSUK programmes",
+      "NSUK courses",
+      "NSUK course list",
+      "NSUK programme list",
+      "undergraduate programmes",
+      "available programmes",
+      "available courses",
+      ...programmes,
+      ...questionVariants,
+    ]),
+    metadata: {
+      academicSession: args.meta.academicSession.trim(),
+      programme: NSUK_PROGRAMME_LIST_TITLE,
+      programmeSlug: NSUK_PROGRAMME_LIST_SLUG,
+      questionVariants,
+      school: args.meta.school.trim(),
+      schoolShortName: args.meta.schoolShortName.trim(),
+      sourceNotes: [
+        `${programmes.length} undergraduate programmes listed from ${args.meta.sourceLabel}.`,
+      ],
+      sourcePages,
+    },
+    question: NSUK_PROGRAMME_LIST_QUESTION,
+    sourceLabel: args.meta.sourceLabel.trim(),
+    status: KNOWLEDGE_ENTRY_STATUSES.published,
+    title: NSUK_PROGRAMME_LIST_TITLE,
+    type: KNOWLEDGE_ENTRY_TYPES.programme,
   };
 }
 
@@ -118,6 +194,27 @@ export function buildNsukKnowledgeKeywords(
 
 export function dedupeQuestionVariants(values: readonly string[]): string[] {
   return dedupeTrimmedStrings(values);
+}
+
+function buildNsukProgrammeListQuestionVariants() {
+  return [
+    "What programmes are available in NSUK?",
+    "List all undergraduate programmes in NSUK.",
+    "What courses are available at NSUK?",
+    "What can I study at NSUK?",
+    "Show me NSUK undergraduate programmes.",
+    "Does NSUK offer undergraduate programmes?",
+    "NSUK course list.",
+    "NSUK programme list.",
+  ];
+}
+
+function getSortedUniqueProgrammes(
+  records: readonly NsukProgrammeRequirementSeedRecord[],
+) {
+  return dedupeTrimmedStrings(records.map((record) => record.programme)).sort(
+    (first, second) => first.localeCompare(second),
+  );
 }
 
 export function dedupeTrimmedStrings(values: readonly string[]): string[] {

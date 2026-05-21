@@ -19,6 +19,25 @@ export const KNOWLEDGE_ENTRY_STATUSES = {
   archived: "archived",
 } as const;
 
+export const KNOWLEDGE_RETRIEVAL_STATUSES = {
+  matched: "matched",
+  noMatch: "no_match",
+} as const;
+
+export const KNOWLEDGE_RETRIEVAL_INTENTS = {
+  programmeList: "programme_list",
+  jambRequirement: "jamb_requirement",
+  olevelRequirement: "olevel_requirement",
+  fullProgrammeRequirement: "full_programme_requirement",
+  generalAdmission: "general_admission",
+  unknown: "unknown",
+} as const;
+
+export const DEFAULT_RETRIEVAL_TOP_K = 3;
+export const MAX_RETRIEVAL_TOP_K = 5;
+export const DEFAULT_RETRIEVAL_SNIPPET_LENGTH = 800;
+export const DEFAULT_RETRIEVAL_GROUNDING_LENGTH = 1600;
+
 export const knowledgeEntryTypeValidator = v.union(
   v.literal(KNOWLEDGE_ENTRY_TYPES.faq),
   v.literal(KNOWLEDGE_ENTRY_TYPES.admissionRequirement),
@@ -86,6 +105,10 @@ export const knowledgeEntryMetadataValidator = v.object({
 
 export type KnowledgeEntryType = Infer<typeof knowledgeEntryTypeValidator>;
 export type KnowledgeEntryStatus = Infer<typeof knowledgeEntryStatusValidator>;
+export type KnowledgeRetrievalStatus =
+  (typeof KNOWLEDGE_RETRIEVAL_STATUSES)[keyof typeof KNOWLEDGE_RETRIEVAL_STATUSES];
+export type KnowledgeRetrievalIntent =
+  (typeof KNOWLEDGE_RETRIEVAL_INTENTS)[keyof typeof KNOWLEDGE_RETRIEVAL_INTENTS];
 export type KnowledgeReviewLevel = Infer<typeof knowledgeReviewLevelValidator>;
 export type KnowledgeRequiredSubjectGroup = Infer<
   typeof knowledgeRequiredSubjectGroupMetadataValidator

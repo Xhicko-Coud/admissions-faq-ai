@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import { mutation } from "../_generated/server";
 import {
+  buildKnowledgeSearchText,
   canArchiveKnowledgeEntries,
   getKnowledgeWriteContext,
   isKnowledgeEntryPublishReady,
@@ -12,6 +13,10 @@ import {
   validateKnowledgeEntryPayload,
 } from "./helpers";
 import { KNOWLEDGE_ENTRY_STATUSES } from "./types";
+import { USER_PROFILE_ROLES } from "../auth/authorization";
+
+const KNOWLEDGE_SEARCH_BACKFILL_DEFAULT_LIMIT = 50;
+const KNOWLEDGE_SEARCH_BACKFILL_MAX_LIMIT = 100;
 
 export const createKnowledgeEntry = mutation({
   args: knowledgeEntryWritePayloadValidator,
@@ -38,6 +43,7 @@ export const createKnowledgeEntry = mutation({
       ...validation.data,
       createdAt: now,
       createdBy: actorUserId,
+      searchText: buildKnowledgeSearchText(validation.data),
       status: KNOWLEDGE_ENTRY_STATUSES.draft,
       updatedAt: now,
       updatedBy: actorUserId,
@@ -111,6 +117,10 @@ export const updateKnowledgeEntry = mutation({
       content: validation.data.content,
       keywords: validation.data.keywords,
       question: validation.data.question,
+      searchText: buildKnowledgeSearchText({
+        ...validation.data,
+        metadata: entry.metadata,
+      }),
       sourceLabel: validation.data.sourceLabel,
       sourceUrl: validation.data.sourceUrl,
       title: validation.data.title,
@@ -291,10 +301,99 @@ export const restoreKnowledgeEntry = mutation({
   },
 });
 
+export const backfillKnowledgeSearchText = mutation({
+  args: {
+    limit: v.optional(v.number()),
+    seedKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const access = await getKnowledgeWriteContext(ctx);
+
+    if (access.status !== "success" || access.profile.role !== USER_PROFILE_ROLES.admin) {
+      const seedAccess = getKnowledgeBackfillSeedAccess(args.seedKey);
+
+      if (seedAccess.status !== "success") {
+        return seedAccess;
+      }
+    }
+
+    const limit = clampBackfillLimit(args.limit);
+    const entries = await ctx.db.query("knowledgeEntries").collect();
+    const entriesNeedingBackfill = entries.filter((entry) => {
+      const nextSearchText = buildKnowledgeSearchText(entry);
+
+      return (entry.searchText ?? "").trim() !== nextSearchText;
+    });
+    const batch = entriesNeedingBackfill.slice(0, limit);
+    const now = Date.now();
+
+    for (const entry of batch) {
+      await ctx.db.patch(entry._id, {
+        searchText: buildKnowledgeSearchText(entry),
+        updatedAt: now,
+      });
+    }
+
+    return {
+      hasMore: entriesNeedingBackfill.length > batch.length,
+      patchedCount: batch.length,
+      scannedCount: entries.length,
+      skippedCount: entries.length - entriesNeedingBackfill.length,
+      status: "success",
+    } as const;
+  },
+});
+
 function areKeywordListsEqual(current: string[], next: string[]) {
   if (current.length !== next.length) {
     return false;
   }
 
   return current.every((keyword, index) => keyword === next[index]);
+}
+
+function clampBackfillLimit(limit: number | undefined) {
+  if (!limit || !Number.isFinite(limit)) {
+    return KNOWLEDGE_SEARCH_BACKFILL_DEFAULT_LIMIT;
+  }
+
+  return Math.min(
+    KNOWLEDGE_SEARCH_BACKFILL_MAX_LIMIT,
+    Math.max(1, Math.floor(limit)),
+  );
+}
+
+function getKnowledgeBackfillSeedAccess(seedKey: string | undefined) {
+  const normalizedSeedKey = seedKey?.trim() ?? "";
+
+  if (!normalizedSeedKey) {
+    return { status: "unauthenticated" } as const;
+  }
+
+  const expectedSeedKey = getSeedEnvValue("ADMIN_SEED_KEY");
+
+  if (!expectedSeedKey || !isValidSeedKey(normalizedSeedKey, expectedSeedKey)) {
+    return { status: "forbidden" } as const;
+  }
+
+  return { status: "success" } as const;
+}
+
+function getSeedEnvValue(name: string) {
+  const value = process.env[name];
+  return value?.trim() ? value : null;
+}
+
+function isValidSeedKey(inputSeedKey: string, expectedSeedKey: string) {
+  if (inputSeedKey.length !== expectedSeedKey.length) {
+    return false;
+  }
+
+  let difference = 0;
+
+  for (let index = 0; index < expectedSeedKey.length; index += 1) {
+    difference |= inputSeedKey.charCodeAt(index) ^ expectedSeedKey.charCodeAt(index);
+  }
+
+  return difference === 0;
 }

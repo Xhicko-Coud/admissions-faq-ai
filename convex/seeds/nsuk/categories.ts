@@ -150,7 +150,7 @@ export function validateNsukSeedCategories(args: {
 
 export async function resolveNsukCategoryIdsBySlug(
   ctx: MutationCtx | QueryCtx,
-  categorySlugs: string[],
+  categories: readonly NsukPreparedCategorySeed[],
 ): Promise<
   | {
       resolutions: NsukCategorySlugResolution[];
@@ -165,15 +165,15 @@ export async function resolveNsukCategoryIdsBySlug(
   const issues: string[] = [];
   const resolutions: NsukCategorySlugResolution[] = [];
 
-  for (const categorySlug of categorySlugs) {
-    const normalizedSlug = normalizeCategorySlug(categorySlug);
+  for (const categorySeed of categories) {
+    const normalizedSlug = normalizeCategorySlug(categorySeed.slug);
 
     if (!normalizedSlug) {
       issues.push("Category slug is required for resolution.");
       continue;
     }
 
-    const category = await getActiveCategoryByNormalizedSlug(ctx, normalizedSlug);
+    const category = await getActiveCategoryForNsukSeed(ctx, categorySeed);
 
     if (!category) {
       issues.push(`Active category not found for slug "${normalizedSlug}".`);
@@ -239,10 +239,11 @@ async function checkNsukSeedCategoryConflicts(
 
     if (
       duplicateByName &&
-      duplicateByName.slug !== category.slug
+      duplicateByName.slug !== category.slug &&
+      duplicateByName.status !== CATEGORY_STATUSES.active
     ) {
       issues.push(
-        `Seed category name "${category.name}" conflicts with existing slug "${duplicateByName.slug}".`,
+        `Seed category name "${category.name}" conflicts with non-active existing slug "${duplicateByName.slug}".`,
       );
     }
   }
@@ -274,7 +275,7 @@ async function upsertNsukSeedCategory(
   const existingCategory = await getActiveCategoryByNormalizedSlug(
     ctx,
     args.category.slug,
-  );
+  ) ?? await getActiveCategoryByNormalizedName(ctx, args.category.name);
 
   if (existingCategory) {
     return await syncExistingNsukSeedCategory(ctx, {
@@ -369,6 +370,31 @@ async function getActiveCategoryByNormalizedSlug(
   }
 
   return category;
+}
+
+async function getActiveCategoryByNormalizedName(
+  ctx: MutationCtx | QueryCtx,
+  normalizedName: string,
+) {
+  const category = await getCategoryDuplicateByName(ctx, {
+    normalizedName,
+  });
+
+  if (!category || category.status !== CATEGORY_STATUSES.active) {
+    return null;
+  }
+
+  return category;
+}
+
+async function getActiveCategoryForNsukSeed(
+  ctx: MutationCtx | QueryCtx,
+  category: NsukPreparedCategorySeed,
+) {
+  return (
+    (await getActiveCategoryByNormalizedSlug(ctx, category.slug)) ??
+    (await getActiveCategoryByNormalizedName(ctx, category.name))
+  );
 }
 
 function collectCategoryIssues(args: {
