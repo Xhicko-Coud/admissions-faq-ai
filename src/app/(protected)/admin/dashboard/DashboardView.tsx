@@ -19,7 +19,7 @@ const placeholderSections = [
   {
     title: "Content visibility",
     description:
-      "Published FAQ content, draft coverage, and category organization will surface here.",
+      "Published knowledge content, draft coverage, and category organization will surface here.",
     icon: BookOpenCheck,
   },
   {
@@ -42,12 +42,12 @@ export function DashboardView() {
       <PageHeader
         eyebrow="Admissions workspace"
         title="Dashboard"
-        description="Monitor admissions FAQ content, chatbot activity, unanswered questions, and answer quality from one workspace."
+        description="Monitor admissions knowledge content, assistant activity, unanswered questions, and answer quality from one workspace."
       />
 
       <EmptyState
         className="bg-white"
-        description="FAQ content, chatbot activity, query logs, feedback, and performance metrics will appear here as the system modules are connected."
+        description="Knowledge content, assistant activity, query logs, feedback, and performance metrics will appear here as the system modules are connected."
         icon={CircleHelp}
         title="Admissions workspace ready"
       />
@@ -85,7 +85,7 @@ export function DashboardView() {
           <div className="space-y-2">
             <CardTitle>What this workspace will support</CardTitle>
             <p className="text-sm leading-6 text-muted-foreground">
-              This dashboard will become the central place for admissions FAQ
+              This dashboard will become the central place for admissions knowledge
               oversight, content refinement, unanswered-question follow-up,
               and answer quality review.
             </p>
@@ -94,7 +94,7 @@ export function DashboardView() {
         <CardContent>
           <ul className="grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-2">
             <li className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3">
-              FAQ content visibility and publishing coverage
+              Knowledge content visibility and publishing coverage
             </li>
             <li className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3">
               Chatbot activity and unanswered-question review

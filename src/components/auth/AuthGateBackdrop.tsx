@@ -5,7 +5,7 @@ import { siteConfig } from "@/config/site";
 
 const previewNavigationItems = [
   { label: "Dashboard", isActive: true },
-  { label: "FAQs" },
+  { label: "Knowledge" },
   { label: "Categories" },
   { label: "Query Logs" },
   { label: "Settings" },
@@ -13,7 +13,7 @@ const previewNavigationItems = [
 
 export function AuthGateBackdrop({ children }: { children: ReactNode }) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[color:oklch(0.98_0.01_145)] text-foreground">
+    <main className="fixed inset-0 z-[120] overflow-hidden bg-[color:oklch(0.98_0.01_145)] text-foreground">
       <div
         aria-hidden="true"
         className="absolute inset-0 flex opacity-90 blur-[1.5px]"

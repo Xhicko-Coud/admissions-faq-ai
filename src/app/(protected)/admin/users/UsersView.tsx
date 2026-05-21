@@ -192,7 +192,7 @@ export function UsersView({
         confirmText={isCreateMode ? "Create User" : "Save Changes"}
         description={
           isCreateMode
-            ? "Add an internal user who can manage admissions FAQ workflows."
+            ? "Add an internal user who can manage admissions support workflows."
             : isViewMode
               ? "Review this user's safe profile fields."
               : "Update this user's role assignment."

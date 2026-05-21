@@ -16,11 +16,13 @@ export type DataTableColumn<TData> = {
 
 type DataTableProps<TData> = {
   actions?: ReactNode;
+  actionsClassName?: string;
   canLoadMore?: boolean;
   className?: string;
   columns: DataTableColumn<TData>[];
   data: TData[];
   description?: string;
+  headerClassName?: string;
   emptyMessage?: string;
   emptyStateIcon?: ReactNode;
   isLoading?: boolean;
@@ -46,11 +48,13 @@ function getVisiblePages(totalPages: number, currentPage: number) {
 
 export function DataTable<TData>({
   actions,
+  actionsClassName,
   canLoadMore = false,
   className,
   columns,
   data,
   description,
+  headerClassName,
   emptyMessage = "No records available.",
   emptyStateIcon,
   isLoading = false,
@@ -88,7 +92,12 @@ export function DataTable<TData>({
       )}
     >
       {title || actions ? (
-        <div className="flex flex-col gap-4 border-b border-primary/10 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
+        <div
+          className={cn(
+            "flex flex-col gap-4 border-b border-primary/10 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:justify-between",
+            headerClassName,
+          )}
+        >
           {title ? (
             <div className="max-w-3xl lg:min-w-0 lg:flex-1">
               <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -98,7 +107,12 @@ export function DataTable<TData>({
             </div>
           ) : null}
           {actions ? (
-            <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto lg:flex-none lg:justify-end">
+            <div
+              className={cn(
+                "flex w-full flex-wrap items-center gap-3 lg:w-auto lg:flex-none lg:justify-end",
+                actionsClassName,
+              )}
+            >
               {actions}
             </div>
           ) : null}

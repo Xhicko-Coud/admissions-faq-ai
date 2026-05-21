@@ -13,14 +13,14 @@ export default function Home() {
         </div>
         <PageHeader
           eyebrow={siteConfig.name}
-          title="Admissions FAQ Assistant"
-          description="Ask common admissions questions and receive answers from the university's approved FAQ knowledge base."
+          title="Admissions Knowledge Assistant"
+          description="Ask common admissions questions and receive answers from the university's approved knowledge base."
         />
         <EmptyState
           className="bg-white"
           description="Approved admissions answers, categories, and chatbot responses will appear here once the knowledge base is connected."
           icon={CircleHelp}
-          title="FAQ assistant is being prepared"
+          title="Knowledge assistant is being prepared"
         />
       </section>
     </main>

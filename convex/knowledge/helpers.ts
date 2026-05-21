@@ -13,6 +13,7 @@ import {
   KNOWLEDGE_ENTRY_STATUSES,
   knowledgeEntryStatusValidator,
   knowledgeEntryTypeValidator,
+  type KnowledgeEntryMetadata,
   type KnowledgeEntryStatus,
   type KnowledgeEntryType,
 } from "./types";
@@ -36,6 +37,7 @@ export const knowledgeEntryListFiltersValidator = {
 
 export const knowledgeEntryWritePayloadValidator = {
   answer: v.optional(v.string()),
+  categoryId: v.optional(v.id("categories")),
   content: v.optional(v.string()),
   keywords: v.optional(v.array(v.string())),
   question: v.optional(v.string()),
@@ -57,11 +59,13 @@ const MAX_KEYWORD_LENGTH = 50;
 export type SafeKnowledgeEntry = {
   answer: string | null;
   archivedAt: number | null;
+  categoryId: KnowledgeEntryRecord["categoryId"] | null;
   content: string | null;
   createdAt: number;
   createdBy: string;
   id: KnowledgeEntryRecord["_id"];
   keywords: string[];
+  metadata: KnowledgeEntryMetadata | null;
   publishedAt: number | null;
   question: string | null;
   sourceLabel: string | null;
@@ -88,6 +92,7 @@ export type PublicKnowledgeEntry = {
 
 export type KnowledgeEntryWritePayloadInput = {
   answer?: string;
+  categoryId?: KnowledgeEntryRecord["categoryId"];
   content?: string;
   keywords?: string[];
   question?: string;
@@ -99,6 +104,7 @@ export type KnowledgeEntryWritePayloadInput = {
 
 export type ValidatedKnowledgeEntryPayload = {
   answer?: string;
+  categoryId?: KnowledgeEntryRecord["categoryId"];
   content?: string;
   keywords?: string[];
   question?: string;
@@ -124,11 +130,13 @@ export function toSafeKnowledgeEntry(entry: KnowledgeEntryRecord): SafeKnowledge
   return {
     answer: entry.answer ?? null,
     archivedAt: entry.archivedAt ?? null,
+    categoryId: entry.categoryId ?? null,
     content: entry.content ?? null,
     createdAt: entry.createdAt,
     createdBy: entry.createdBy,
     id: entry._id,
     keywords: entry.keywords ?? [],
+    metadata: entry.metadata ?? null,
     publishedAt: entry.publishedAt ?? null,
     question: entry.question ?? null,
     sourceLabel: entry.sourceLabel ?? null,
@@ -404,6 +412,7 @@ export function validateKnowledgeEntryPayload(
   return {
     data: {
       ...(answer ? { answer } : {}),
+      ...(input.categoryId ? { categoryId: input.categoryId } : {}),
       ...(content ? { content } : {}),
       ...(keywords.length > 0 ? { keywords } : {}),
       ...(question ? { question } : {}),
@@ -424,6 +433,7 @@ export function canArchiveKnowledgeEntries(role: UserProfileRole) {
 export function isKnowledgeEntryPublishReady(entry: KnowledgeEntryRecord) {
   return validateKnowledgeEntryPayload({
     answer: entry.answer,
+    categoryId: entry.categoryId,
     content: entry.content,
     keywords: entry.keywords,
     question: entry.question,

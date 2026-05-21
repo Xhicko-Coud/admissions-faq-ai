@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 import { categoryStatusValidator } from "./categories/types";
 import {
+  knowledgeEntryMetadataValidator,
   knowledgeEntryStatusValidator,
   knowledgeEntryTypeValidator,
 } from "./knowledge/types";
@@ -52,6 +53,7 @@ export default defineSchema({
     createdAt: v.number(),
     createdBy: v.string(),
     keywords: v.optional(v.array(v.string())),
+    metadata: v.optional(knowledgeEntryMetadataValidator),
     publishedAt: v.optional(v.number()),
     archivedAt: v.optional(v.number()),
     question: v.optional(v.string()),

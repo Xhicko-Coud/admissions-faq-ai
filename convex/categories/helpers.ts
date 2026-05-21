@@ -14,6 +14,7 @@ import {
   categoryStatusValidator,
   type CategoryStatus,
 } from "./types";
+import { KNOWLEDGE_ENTRY_STATUSES } from "../knowledge/types";
 
 export const CATEGORY_READ_ROLES = [
   USER_PROFILE_ROLES.admin,
@@ -35,6 +36,12 @@ export const categoryWritePayloadValidator = {
   description: v.optional(v.string()),
   displayOrder: v.optional(v.number()),
   name: v.string(),
+  status: v.optional(
+    v.union(
+      v.literal(CATEGORY_STATUSES.active),
+      v.literal(CATEGORY_STATUSES.inactive),
+    ),
+  ),
 } as const;
 
 type CategoryRecord = Doc<"categories">;
@@ -69,6 +76,7 @@ export type CategoryWritePayloadInput = {
   description?: string;
   displayOrder?: number;
   name: string;
+  status?: typeof CATEGORY_STATUSES.active | typeof CATEGORY_STATUSES.inactive;
 };
 
 export type ValidatedCategoryPayload = {
@@ -77,6 +85,7 @@ export type ValidatedCategoryPayload = {
   name: string;
   normalizedName: string;
   slug: string;
+  status?: typeof CATEGORY_STATUSES.active | typeof CATEGORY_STATUSES.inactive;
 };
 
 export type CategoryValidationResult =
@@ -276,10 +285,26 @@ export function validateCategoryPayload(
       name,
       normalizedName,
       slug,
+      ...(input.status ? { status: input.status } : {}),
     },
     isValid: true,
     status: "success",
   };
+}
+
+export async function categoryHasPublishedKnowledgeEntries(
+  ctx: MutationCtx | QueryCtx,
+  categoryId: Id<"categories">,
+) {
+  const publishedEntry = await ctx.db
+    .query("knowledgeEntries")
+    .withIndex("by_categoryId", (lookup) => lookup.eq("categoryId", categoryId))
+    .filter((entry) =>
+      entry.eq(entry.field("status"), KNOWLEDGE_ENTRY_STATUSES.published),
+    )
+    .first();
+
+  return Boolean(publishedEntry);
 }
 
 export async function loadCategories(

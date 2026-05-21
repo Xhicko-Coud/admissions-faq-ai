@@ -24,7 +24,7 @@ export const adminNavigation: NavigationItem[] = [
     href: "/admin/dashboard",
     icon: LayoutDashboard,
     label: "Dashboard",
-    description: "Admissions FAQ support overview",
+    description: "Admissions support overview",
     matchPaths: ["/admin/dashboard"],
   },
   {
@@ -33,8 +33,6 @@ export const adminNavigation: NavigationItem[] = [
     label: "Knowledge Base",
     description: "Admissions knowledge entries",
     matchPaths: ["/admin/knowledge"],
-    disabled: true,
-    badge: "Coming soon",
   },
   {
     href: "/admin/categories",
@@ -42,8 +40,6 @@ export const adminNavigation: NavigationItem[] = [
     label: "Categories",
     description: "Admissions topic groups",
     matchPaths: ["/admin/categories"],
-    disabled: true,
-    badge: "Coming soon",
   },
   {
     href: "/admin/query-logs",

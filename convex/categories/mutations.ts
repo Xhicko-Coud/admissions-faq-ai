@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import {
   categoryWritePayloadValidator,
+  categoryHasPublishedKnowledgeEntries,
   getCategoryDuplicateByName,
   getCategoryDuplicateBySlug,
   getCategoryWriteContext,
@@ -132,7 +133,9 @@ export const updateCategory = mutation({
       category.name !== validation.data.normalizedName ||
       category.slug !== validation.data.slug ||
       (category.description ?? undefined) !== validation.data.description ||
-      category.displayOrder !== validation.data.displayOrder;
+      category.displayOrder !== validation.data.displayOrder ||
+      (validation.data.status !== undefined &&
+        category.status !== validation.data.status);
 
     if (!hasChanges) {
       return {
@@ -141,11 +144,26 @@ export const updateCategory = mutation({
       } as const;
     }
 
+    if (
+      validation.data.status === CATEGORY_STATUSES.inactive &&
+      category.status !== CATEGORY_STATUSES.inactive
+    ) {
+      const hasPublishedUsage = await categoryHasPublishedKnowledgeEntries(
+        ctx,
+        args.categoryId,
+      );
+
+      if (hasPublishedUsage) {
+        return { status: "published_usage_inactive_blocked" } as const;
+      }
+    }
+
     await ctx.db.patch(args.categoryId, {
       description: validation.data.description,
       displayOrder: validation.data.displayOrder,
       name: validation.data.normalizedName,
       slug: validation.data.slug,
+      ...(validation.data.status ? { status: validation.data.status } : {}),
       updatedAt: Date.now(),
       updatedBy: access.user._id,
     });
@@ -191,6 +209,15 @@ export const archiveCategory = mutation({
       } as const;
     }
 
+    const hasPublishedUsage = await categoryHasPublishedKnowledgeEntries(
+      ctx,
+      args.categoryId,
+    );
+
+    if (hasPublishedUsage) {
+      return { status: "published_usage_blocked" } as const;
+    }
+
     const now = Date.now();
 
     await ctx.db.patch(args.categoryId, {
@@ -209,6 +236,54 @@ export const archiveCategory = mutation({
     return {
       category: toArchivedCategoryMutationSummary(archivedCategory),
       status: "archived",
+    } as const;
+  },
+});
+
+export const unarchiveCategory = mutation({
+  args: {
+    categoryId: v.id("categories"),
+  },
+  handler: async (ctx, args) => {
+    const access = await getCategoryWriteContext(ctx);
+
+    if (access.status !== "success") {
+      return access;
+    }
+
+    if (access.profile.role !== USER_PROFILE_ROLES.admin) {
+      return { status: "forbidden" } as const;
+    }
+
+    const category = await ctx.db.get(args.categoryId);
+
+    if (!category) {
+      return { status: "not_found" } as const;
+    }
+
+    if (category.status !== CATEGORY_STATUSES.archived) {
+      return {
+        category: toCategoryMutationSummary(category),
+        status: "unchanged",
+      } as const;
+    }
+
+    await ctx.db.patch(args.categoryId, {
+      archivedAt: undefined,
+      status: CATEGORY_STATUSES.active,
+      updatedAt: Date.now(),
+      updatedBy: access.user._id,
+    });
+
+    const unarchivedCategory = await ctx.db.get(args.categoryId);
+
+    if (!unarchivedCategory) {
+      return { status: "failed" } as const;
+    }
+
+    return {
+      category: toCategoryMutationSummary(unarchivedCategory),
+      status: "unarchived",
     } as const;
   },
 });

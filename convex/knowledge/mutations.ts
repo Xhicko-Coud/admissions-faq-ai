@@ -90,6 +90,7 @@ export const updateKnowledgeEntry = mutation({
     const hasChanges =
       entry.title !== validation.data.title ||
       entry.type !== validation.data.type ||
+      entry.categoryId !== validation.data.categoryId ||
       (entry.question ?? undefined) !== validation.data.question ||
       (entry.answer ?? undefined) !== validation.data.answer ||
       (entry.content ?? undefined) !== validation.data.content ||
@@ -106,6 +107,7 @@ export const updateKnowledgeEntry = mutation({
 
     await ctx.db.patch(args.knowledgeEntryId, {
       answer: validation.data.answer,
+      categoryId: validation.data.categoryId,
       content: validation.data.content,
       keywords: validation.data.keywords,
       question: validation.data.question,
@@ -235,6 +237,56 @@ export const archiveKnowledgeEntry = mutation({
     return {
       entry: toArchivedKnowledgeMutationEntrySummary(archivedEntry),
       status: "archived",
+    } as const;
+  },
+});
+
+export const restoreKnowledgeEntry = mutation({
+  args: {
+    knowledgeEntryId: v.id("knowledgeEntries"),
+  },
+  handler: async (ctx, args) => {
+    const access = await getKnowledgeWriteContext(ctx);
+
+    if (access.status !== "success") {
+      return access;
+    }
+
+    if (!canArchiveKnowledgeEntries(access.profile.role)) {
+      return { status: "forbidden" } as const;
+    }
+
+    const entry = await ctx.db.get(args.knowledgeEntryId);
+
+    if (!entry) {
+      return { status: "not_found" } as const;
+    }
+
+    if (entry.status !== KNOWLEDGE_ENTRY_STATUSES.archived) {
+      return {
+        entry: toKnowledgeMutationEntrySummary(entry),
+        status: "unchanged",
+      } as const;
+    }
+
+    const now = Date.now();
+
+    await ctx.db.patch(args.knowledgeEntryId, {
+      archivedAt: undefined,
+      status: KNOWLEDGE_ENTRY_STATUSES.draft,
+      updatedAt: now,
+      updatedBy: access.user._id,
+    });
+
+    const restoredEntry = await ctx.db.get(args.knowledgeEntryId);
+
+    if (!restoredEntry) {
+      return { status: "failed" } as const;
+    }
+
+    return {
+      entry: toKnowledgeMutationEntrySummary(restoredEntry),
+      status: "restored",
     } as const;
   },
 });

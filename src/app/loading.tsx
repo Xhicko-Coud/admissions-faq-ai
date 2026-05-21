@@ -33,7 +33,7 @@ export default function Loading() {
               Navigation
             </p>
             <div className="grid gap-2">
-              {["Dashboard", "FAQs", "Categories", "Query Logs"].map(
+              {["Dashboard", "Knowledge", "Categories", "Query Logs"].map(
                 (item, index) => (
                   <div
                     key={item}
@@ -105,7 +105,7 @@ export default function Loading() {
             Loading workspace
           </p>
           <p className="text-sm leading-6 text-primary/70">
-            Preparing admissions FAQ support.
+            Preparing admissions support.
           </p>
         </div>
       </div>

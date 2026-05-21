@@ -127,7 +127,7 @@ export function LoginView() {
                 Admin sign in
               </h1>
               <p className="text-sm leading-6 text-muted-foreground">
-                Sign in to manage admissions FAQ content, chatbot activity, and
+                Sign in to manage admissions knowledge, assistant activity, and
                 review workflows.
               </p>
             </div>

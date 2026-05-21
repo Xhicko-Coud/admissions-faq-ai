@@ -235,7 +235,7 @@ export function UsersForm({
         </div>
 
         <p className="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-xs text-primary/80">
-          This screen creates trusted internal users for admissions FAQ workflows.
+          This screen creates trusted internal users for admissions support workflows.
           Passwords are never shown after creation.
         </p>
 
@@ -392,7 +392,7 @@ export function UsersForm({
 
       {isEditMode ? (
         <p className="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-xs text-primary/80">
-          Update the user's assigned admissions FAQ workspace role. Password
+          Update the user's assigned admissions workspace role. Password
           changes are handled separately from role management.
         </p>
       ) : isViewMode ? (

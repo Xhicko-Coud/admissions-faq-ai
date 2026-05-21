@@ -1,10 +1,10 @@
 export const siteConfig = {
-  name: "Admissions FAQ AI",
+  name: "Admissions Knowledge AI",
   shortDescription:
-    "A conversational FAQ system for university admissions support.",
+    "A conversational knowledge system for university admissions support.",
   description:
-    "A conversational FAQ system for university admissions support.",
+    "A conversational knowledge system for university admissions support.",
   dashboardRoute: "/admin/dashboard",
   loginRoute: "/login",
-  publicFaqRoute: "/",
+  publicAssistantRoute: "/",
 } as const;

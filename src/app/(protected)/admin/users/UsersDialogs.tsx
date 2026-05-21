@@ -104,7 +104,7 @@ export function UsersDialogs({
     <>
       <ConfirmationDialog
         confirmText="Open"
-        description="Open the user creation form for an internal admissions FAQ user?"
+        description="Open the user creation form for an internal admissions workspace user?"
         icon={<Plus className="size-7 text-primary" />}
         isOpen={isOpenCreateSheetConfirmOpen}
         onConfirm={allowOpenCreateSheet}
@@ -197,7 +197,7 @@ export function UsersDialogs({
               Change user role?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              This will update the user's access level inside the admissions FAQ
+              This will update the user's access level inside the admissions
               admin workspace. It does not change login credentials.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -277,7 +277,7 @@ export function UsersDialogs({
         }
         description={
           pendingStatusUser?.status === "active"
-            ? `${pendingStatusUser.name || "This user"} (${pendingStatusUser.email}) will no longer be able to access the admissions FAQ admin workspace.`
+            ? `${pendingStatusUser.name || "This user"} (${pendingStatusUser.email}) will no longer be able to access the admissions admin workspace.`
             : `${pendingStatusUser?.name || "This user"} (${pendingStatusUser?.email || "selected email"}) will regain access based on their assigned role.`
         }
         icon={

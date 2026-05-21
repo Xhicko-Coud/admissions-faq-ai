@@ -49,7 +49,7 @@ export default function NotFound() {
             className="h-11 cursor-pointer rounded-md border-primary/15 bg-white text-foreground hover:bg-primary/5"
             variant="outline"
           >
-            <Link href={siteConfig.publicFaqRoute}>Public assistant</Link>
+            <Link href={siteConfig.publicAssistantRoute}>Public assistant</Link>
           </Button>
         </CardContent>
       </Card>
