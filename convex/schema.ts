@@ -3,6 +3,17 @@ import { v } from "convex/values";
 
 import { categoryStatusValidator } from "./categories/types";
 import {
+  chatMessageMetadataValidator,
+  chatMessageRoleValidator,
+  chatMessageStatusValidator,
+  chatResponseStatusValidator,
+  chatRetrievalIntentValidator,
+  chatRetrievalStatusValidator,
+  chatSourceMetadataValidator,
+  chatSourceValidator,
+  chatStatusValidator,
+} from "./chat/types";
+import {
   knowledgeEntryMetadataValidator,
   knowledgeEntryStatusValidator,
   knowledgeEntryTypeValidator,
@@ -76,4 +87,41 @@ export default defineSchema({
       searchField: "searchText",
       filterFields: ["status", "type"],
     }),
+  chats: defineTable({
+    assistantMessageCount: v.number(),
+    createdAt: v.number(),
+    lastMessageAt: v.optional(v.number()),
+    lastStatus: v.optional(chatResponseStatusValidator),
+    messageCount: v.number(),
+    source: chatSourceValidator,
+    status: chatStatusValidator,
+    title: v.optional(v.string()),
+    updatedAt: v.number(),
+    userMessageCount: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_source", ["source"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_updatedAt", ["updatedAt"])
+    .index("by_lastMessageAt", ["lastMessageAt"])
+    .index("by_lastStatus", ["lastStatus"]),
+  chatMessages: defineTable({
+    chatId: v.id("chats"),
+    content: v.string(),
+    createdAt: v.number(),
+    metadata: v.optional(chatMessageMetadataValidator),
+    responseStatus: v.optional(chatResponseStatusValidator),
+    retrievalIntent: v.optional(chatRetrievalIntentValidator),
+    retrievalStatus: v.optional(chatRetrievalStatusValidator),
+    role: chatMessageRoleValidator,
+    sources: v.optional(v.array(chatSourceMetadataValidator)),
+    status: chatMessageStatusValidator,
+  })
+    .index("by_chatId", ["chatId"])
+    .index("by_chatId_createdAt", ["chatId", "createdAt"])
+    .index("by_role", ["role"])
+    .index("by_status", ["status"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_responseStatus", ["responseStatus"])
+    .index("by_retrievalStatus", ["retrievalStatus"]),
 });

@@ -37,6 +37,7 @@ export const DEFAULT_RETRIEVAL_TOP_K = 3;
 export const MAX_RETRIEVAL_TOP_K = 5;
 export const DEFAULT_RETRIEVAL_SNIPPET_LENGTH = 800;
 export const DEFAULT_RETRIEVAL_GROUNDING_LENGTH = 1600;
+export const PROGRAMME_LIST_RETRIEVAL_GROUNDING_LENGTH = 6000;
 
 export const knowledgeEntryTypeValidator = v.union(
   v.literal(KNOWLEDGE_ENTRY_TYPES.faq),

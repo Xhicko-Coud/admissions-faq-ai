@@ -1,0 +1,25 @@
+npx convex run llm/generateAnswer:generateAnswer '{"question":"How can I buy a car in Abuja?"}'
+
+npx convex run llm/generateAnswer:generateAnswer '{"question":"What programmes are available in NSUK?"}'
+
+npx convex run llm/generateAnswer:generateAnswer '{"question":"Can I study Mass Communication with Government and Literature?"}'
+
+npx convex run llm/generateAnswer:generateAnswer '{"question":"What O level subjects are required for Accounting?"}'
+
+npx convex run llm/generateAnswer:generateAnswer '{"question":"What JAMB subjects do I need for Computer Science?"}'
+
+KNOWLEDGE
+
+ npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"How can I buy a car in Abuja?","topK":3}'  
+
+  npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"Can I study Broadcasting with Government and Literature?","topK":3}'
+
+  npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"What programmes are available in NSUK?","topK":5}'            
+
+  npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"What JAMB subjects do I need for Computer Science?","topK":3}'
+
+  npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"What O level subjects are required for Theatre Art?","topK":10}'   
+
+  npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"What JAMB subjects do I need for Computer Science?","topK":3}'     
+
+  npx convex run knowledge/queries:retrievePublishedKnowledge '{"question":"How can I buy a car in Abuja?","topK":3}'  

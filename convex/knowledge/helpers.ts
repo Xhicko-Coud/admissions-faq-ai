@@ -16,6 +16,7 @@ import {
   KNOWLEDGE_ENTRY_STATUSES,
   KNOWLEDGE_RETRIEVAL_INTENTS,
   MAX_RETRIEVAL_TOP_K,
+  PROGRAMME_LIST_RETRIEVAL_GROUNDING_LENGTH,
   knowledgeEntryStatusValidator,
   knowledgeEntryTypeValidator,
   type KnowledgeEntryMetadata,
@@ -536,7 +537,7 @@ export function clampRetrievalTopK(topK: number | undefined) {
 }
 
 export function normalizeRetrievalQuestion(question: string) {
-  return normalizeWhitespace(question);
+  return normalizeRetrievalMatchText(question);
 }
 
 export function isAdmissionsRelatedQuery(question: string) {
@@ -899,11 +900,16 @@ function buildFullProgrammeRequirementGroundingText(entry: KnowledgeEntryRecord)
 }
 
 function buildProgrammeListGroundingText(entry: KnowledgeEntryRecord) {
-  return buildBoundedGroundingText([
-    `Title: ${entry.title}`,
-    entry.answer ?? entry.content ?? entry.question,
-    entry.sourceLabel ? `Source: ${entry.sourceLabel}` : null,
-  ]);
+  return buildKnowledgeSnippet(
+    [
+      `Title: ${entry.title}`,
+      entry.answer ?? entry.content ?? entry.question,
+      entry.sourceLabel ? `Source: ${entry.sourceLabel}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    PROGRAMME_LIST_RETRIEVAL_GROUNDING_LENGTH,
+  );
 }
 
 function buildGeneralGroundingText(entry: KnowledgeEntryRecord) {
@@ -955,7 +961,9 @@ function normalizeRetrievalMatchText(value: string) {
   return normalizeWhitespace(value)
     .toLowerCase()
     .replace(/[’`]/g, "'")
-    .replace(/o'level/g, "olevel")
+    .replace(/\bo[\s-]*'?level\b/g, "olevel")
+    .replace(/\bolevl\b/g, "olevel")
+    .replace(/\bscreeninge\b/g, "screening")
     .replace(/[^a-z0-9']+/g, " ");
 }
 
