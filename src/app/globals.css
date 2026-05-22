@@ -129,3 +129,55 @@
     @apply font-sans;
   }
 }
+
+@layer utilities {
+  .chat-scrollbar {
+    scrollbar-color: rgb(139 92 246 / 0.72) transparent;
+    scrollbar-width: thin;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(139 92 246 / 0.64);
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(167 139 250 / 0.82);
+    background-clip: content-box;
+  }
+
+  .chat-input-scrollbar {
+    scrollbar-color: rgb(139 92 246 / 0.66) transparent;
+    scrollbar-width: thin;
+  }
+
+  .chat-input-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat-input-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-input-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(139 92 246 / 0.58);
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+  }
+
+  .chat-input-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(167 139 250 / 0.78);
+    background-clip: content-box;
+  }
+}

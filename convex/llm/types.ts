@@ -47,9 +47,16 @@ export type LlmRetrievalMetadata = {
 };
 
 export type LlmPromptInput = {
+  conversationContext: LlmRecentConversationMessage[];
+  isContextualFollowUp: boolean;
   question: string;
   retrieval: LlmRetrievalMetadata;
   sources: LlmSourceContext[];
+};
+
+export type LlmRecentConversationMessage = {
+  content: string;
+  role: "user" | "assistant";
 };
 
 export type SafeLlmAnswerSource = {

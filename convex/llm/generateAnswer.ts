@@ -27,25 +27,49 @@ import {
 import { LLM_RESPONSE_STATUSES, type LlmPromptInput } from "./types";
 
 const MAX_STUDENT_QUESTION_LENGTH = 500;
+const MAX_RETRIEVAL_QUERY_LENGTH = 1000;
+const MAX_CONVERSATION_CONTEXT_MESSAGES = 8;
+const MAX_CONVERSATION_CONTEXT_LENGTH = 2400;
 
 export const generateAnswer = action({
   args: {
+    conversationContext: v.optional(
+      v.array(
+        v.object({
+          content: v.string(),
+          role: v.union(v.literal("user"), v.literal("assistant")),
+        }),
+      ),
+    ),
+    isContextualFollowUp: v.optional(v.boolean()),
     question: v.string(),
+    retrievalQuestion: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const question = args.question.trim();
 
     if (!question || question.length > MAX_STUDENT_QUESTION_LENGTH) {
       return buildFallbackLlmAnswerResponse({
-        input: buildEmptyPromptInput(question),
+        input: buildEmptyPromptInput({
+          conversationContext: [],
+          isContextualFollowUp: false,
+          question,
+        }),
         status: LLM_RESPONSE_STATUSES.noMatch,
       });
     }
 
+    const conversationContext = sanitizeConversationContext(
+      args.conversationContext,
+    );
+    const retrievalQuestion = normalizeRetrievalQuery(
+      args.retrievalQuestion ?? question,
+    );
+    const isContextualFollowUp = Boolean(args.isContextualFollowUp);
     const retrieval = await ctx.runQuery(
       api.knowledge.queries.retrievePublishedKnowledge,
       {
-        question,
+        question: retrievalQuestion,
       },
     );
     const sources = retrieval.matches.map(toLlmSourceContext);
@@ -55,6 +79,8 @@ export const generateAnswer = action({
       sources,
     });
     const promptInput: LlmPromptInput = {
+      conversationContext,
+      isContextualFollowUp,
       question: retrieval.query,
       retrieval: {
         intent: retrieval.intent,
@@ -68,7 +94,9 @@ export const generateAnswer = action({
     if (shouldUseOutOfDomainFallback(promptInput)) {
       return buildFallbackLlmAnswerResponse({
         input: promptInput,
-        status: LLM_RESPONSE_STATUSES.outOfDomain,
+        status: isContextualFollowUp
+          ? LLM_RESPONSE_STATUSES.insufficientContext
+          : LLM_RESPONSE_STATUSES.outOfDomain,
       });
     }
 
@@ -117,7 +145,9 @@ export const generateAnswer = action({
         {
           content: buildGroundedAdmissionsUserPrompt({
             context,
-            question: retrieval.query,
+            conversationContext:
+              formatRecentConversationContext(conversationContext),
+            question,
           }),
           role: "user",
         },
@@ -138,15 +168,63 @@ export const generateAnswer = action({
   },
 });
 
-function buildEmptyPromptInput(question: string): LlmPromptInput {
+function buildEmptyPromptInput(args: {
+  conversationContext: LlmPromptInput["conversationContext"];
+  isContextualFollowUp: boolean;
+  question: string;
+}): LlmPromptInput {
   return {
-    question,
+    conversationContext: args.conversationContext,
+    isContextualFollowUp: args.isContextualFollowUp,
+    question: args.question,
     retrieval: {
       intent: KNOWLEDGE_RETRIEVAL_INTENTS.unknown,
-      query: question,
+      query: args.question,
       status: KNOWLEDGE_RETRIEVAL_STATUSES.noMatch,
       topK: DEFAULT_RETRIEVAL_TOP_K,
     },
     sources: [],
   };
+}
+
+function sanitizeConversationContext(
+  messages: LlmPromptInput["conversationContext"] | undefined,
+): LlmPromptInput["conversationContext"] {
+  return (messages ?? [])
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .map((message) => ({
+      content: normalizePromptLine(message.content),
+      role: message.role,
+    }))
+    .filter((message) => message.content.length > 0)
+    .slice(-MAX_CONVERSATION_CONTEXT_MESSAGES);
+}
+
+function formatRecentConversationContext(
+  messages: LlmPromptInput["conversationContext"],
+) {
+  const formattedContext = messages
+    .map((message) => `${message.role === "user" ? "Student" : "Assistant"}: ${message.content}`)
+    .join("\n");
+
+  return truncateText(formattedContext, MAX_CONVERSATION_CONTEXT_LENGTH);
+}
+
+function normalizeRetrievalQuery(value: string) {
+  return truncateText(
+    value.trim().replace(/\s+/g, " "),
+    MAX_RETRIEVAL_QUERY_LENGTH,
+  );
+}
+
+function normalizePromptLine(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function truncateText(value: string, maxLength: number) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }

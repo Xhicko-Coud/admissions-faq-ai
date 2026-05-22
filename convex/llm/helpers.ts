@@ -17,13 +17,24 @@ export const DEFAULT_LLM_CONTEXT_MAX_LENGTH = 6000;
 const FALLBACK_ANSWERS: Record<LlmResponseStatus, string> = {
   [LLM_RESPONSE_STATUSES.answered]: "",
   [LLM_RESPONSE_STATUSES.noMatch]:
-    "I do not have enough approved admissions information to answer that confidently. Please contact the admissions office for accurate guidance.",
+    "I don't have enough approved admissions information to answer that.",
   [LLM_RESPONSE_STATUSES.lowConfidence]:
-    "I found limited approved admissions information, but not enough to answer confidently. Please contact the admissions office for accurate guidance.",
+    "I don't have enough approved admissions information to answer that.",
   [LLM_RESPONSE_STATUSES.insufficientContext]:
-    "I do not have enough approved NSUK information for that exact question. Please check the programme name or ask about another listed NSUK programme.",
+    "I don't have enough approved admissions information to answer that.",
   [LLM_RESPONSE_STATUSES.outOfDomain]:
-    "I can help with admissions-related questions. Please ask about admissions, programmes, requirements, screening, documents, fees, deadlines, or application steps.",
+    [
+      "I can help with admissions-related questions. Please ask about:",
+      "",
+      "- Admissions",
+      "- Programmes",
+      "- Requirements",
+      "- Screening",
+      "- Documents",
+      "- Fees",
+      "- Deadlines",
+      "- Application steps",
+    ].join("\n"),
   [LLM_RESPONSE_STATUSES.missingConfiguration]:
     "I cannot generate an admissions answer right now. Please contact the admissions office for accurate guidance.",
   [LLM_RESPONSE_STATUSES.rateLimited]:

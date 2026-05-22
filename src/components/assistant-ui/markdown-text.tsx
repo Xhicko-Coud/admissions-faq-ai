@@ -8,6 +8,7 @@ import {
   unstable_memoizeMarkdownComponents as memoizeMarkdownComponents,
   useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { type FC, memo, useState } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
@@ -26,6 +27,35 @@ const MarkdownTextImpl = () => {
 };
 
 export const MarkdownText = memo(MarkdownTextImpl);
+
+export function SafeMarkdownText({
+  className,
+  content,
+}: {
+  className?: string;
+  content: string;
+}) {
+  return (
+    <div className={cn("aui-md", className)}>
+      <ReactMarkdown
+        components={defaultComponents}
+        remarkPlugins={[remarkGfm]}
+      >
+        {normalizeInlineMarkdownBullets(content)}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
+function normalizeInlineMarkdownBullets(content: string) {
+  const inlineBulletMatches = content.match(/\s[*-]\s+\S/g);
+
+  if (!inlineBulletMatches || inlineBulletMatches.length < 2) {
+    return content;
+  }
+
+  return content.replace(/\s[*-]\s+/g, "\n- ");
+}
 
 const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();

@@ -114,6 +114,7 @@ export const appendAssistantChatMessage = mutation({
       content: args.content,
       label: "Answer",
       maxLength: MAX_ASSISTANT_MESSAGE_LENGTH,
+      preserveLineBreaks: true,
     });
 
     if (!validation.isValid) {
@@ -192,6 +193,7 @@ export const saveChatExchange = mutation({
       content: args.assistantContent,
       label: "Answer",
       maxLength: MAX_ASSISTANT_MESSAGE_LENGTH,
+      preserveLineBreaks: true,
     });
 
     if (!assistantValidation.isValid) {

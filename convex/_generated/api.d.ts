@@ -19,6 +19,7 @@ import type * as categories_types from "../categories/types.js";
 import type * as chat_helpers from "../chat/helpers.js";
 import type * as chat_mutations from "../chat/mutations.js";
 import type * as chat_queries from "../chat/queries.js";
+import type * as chat_submitPublicChatMessage from "../chat/submitPublicChatMessage.js";
 import type * as chat_types from "../chat/types.js";
 import type * as health from "../health.js";
 import type * as http from "../http.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   "chat/helpers": typeof chat_helpers;
   "chat/mutations": typeof chat_mutations;
   "chat/queries": typeof chat_queries;
+  "chat/submitPublicChatMessage": typeof chat_submitPublicChatMessage;
   "chat/types": typeof chat_types;
   health: typeof health;
   http: typeof http;

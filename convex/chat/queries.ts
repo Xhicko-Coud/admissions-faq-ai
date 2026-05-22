@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-import { query } from "../_generated/server";
+import { internalQuery, query } from "../_generated/server";
 import {
   CHAT_MESSAGE_LIST_LIMIT,
   RECENT_CHAT_LIST_LIMIT,
@@ -54,6 +54,36 @@ export const listChatMessages = query({
   },
 });
 
+export const getRecentChatMessagesForContext = internalQuery({
+  args: {
+    chatId: v.id("chats"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const chat = await ctx.db.get(args.chatId);
+
+    if (!chat) {
+      return { status: "not_found" } as const;
+    }
+
+    const limit = clampRecentMessageContextLimit(args.limit);
+    const messages = await ctx.db
+      .query("chatMessages")
+      .withIndex("by_chatId_createdAt", (lookup) => lookup.eq("chatId", args.chatId))
+      .order("desc")
+      .take(limit);
+
+    return {
+      messages: messages.reverse().map((message) => ({
+        content: message.content,
+        createdAt: message.createdAt,
+        role: message.role,
+      })),
+      status: "success",
+    } as const;
+  },
+});
+
 export const listRecentChats = query({
   args: {},
   handler: async (ctx) => {
@@ -94,4 +124,12 @@ function canReadRecentChats(role: "admin" | "editor" | "reviewer") {
     role === USER_PROFILE_ROLES.admin ||
     role === USER_PROFILE_ROLES.reviewer
   );
+}
+
+function clampRecentMessageContextLimit(limit: number | undefined) {
+  if (!limit || !Number.isFinite(limit)) {
+    return 6;
+  }
+
+  return Math.min(8, Math.max(1, Math.floor(limit)));
 }

@@ -143,8 +143,11 @@ export function validateMessageContent(args: {
   content: string;
   maxLength: number;
   label: string;
+  preserveLineBreaks?: boolean;
 }): MessageContentValidationResult {
-  const content = normalizeRequiredText(args.content);
+  const content = normalizeRequiredText(args.content, {
+    preserveLineBreaks: args.preserveLineBreaks,
+  });
   const issues: string[] = [];
 
   if (!content) {
@@ -360,8 +363,21 @@ function normalizeOptionalText(value: string | undefined) {
   return normalizedValue ? normalizedValue : undefined;
 }
 
-function normalizeRequiredText(value: string) {
-  return value.trim().replace(/\s+/g, " ");
+function normalizeRequiredText(
+  value: string,
+  options: { preserveLineBreaks?: boolean } = {},
+) {
+  if (!options.preserveLineBreaks) {
+    return value.trim().replace(/\s+/g, " ");
+  }
+
+  return value
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim().replace(/[^\S\n]+/g, " "))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function normalizeNullableText(value: string | null | undefined) {
