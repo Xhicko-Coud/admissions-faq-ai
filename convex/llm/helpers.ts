@@ -117,12 +117,48 @@ export function selectLlmSourcesForIntent(args: {
     return programmeListSource ? [programmeListSource] : [];
   }
 
+  const exactRequestedProgramme = extractRequestedProgrammeName(args.question);
+
   if (
     args.intent === KNOWLEDGE_RETRIEVAL_INTENTS.jambRequirement ||
     args.intent === KNOWLEDGE_RETRIEVAL_INTENTS.olevelRequirement ||
     args.intent === KNOWLEDGE_RETRIEVAL_INTENTS.fullProgrammeRequirement
   ) {
-    return args.sources.slice(0, 1);
+    const requestedProgramme = exactRequestedProgramme;
+    const exactProgrammeSource = requestedProgramme
+      ? args.sources.find((source) =>
+          sourceMatchesProgrammeSpecificIntent({
+            exact: true,
+            intent: args.intent,
+            programme: requestedProgramme,
+            source,
+          }),
+        )
+      : null;
+    const programmeSource =
+      exactProgrammeSource ??
+      (requestedProgramme
+        ? args.sources.find((source) =>
+            sourceMatchesProgrammeSpecificIntent({
+              exact: false,
+              intent: args.intent,
+              programme: requestedProgramme,
+              source,
+            }),
+          )
+        : null);
+
+    return programmeSource ? [programmeSource] : args.sources.slice(0, 1);
+  }
+
+  if (exactRequestedProgramme) {
+    const exactProgrammeSource = args.sources.find((source) =>
+      sourceContainsExactProgramme(source, exactRequestedProgramme),
+    );
+
+    if (exactProgrammeSource) {
+      return [exactProgrammeSource];
+    }
   }
 
   return args.sources
@@ -278,6 +314,67 @@ function isProgrammeListSource(source: LlmSourceContext) {
   );
 }
 
+function sourceMatchesProgrammeSpecificIntent(args: {
+  exact: boolean;
+  intent: KnowledgeRetrievalIntent;
+  programme: string;
+  source: LlmSourceContext;
+}) {
+  if (isProgrammeListSource(args.source)) {
+    return false;
+  }
+
+  if (args.exact && !sourceContainsExactProgramme(args.source, args.programme)) {
+    return false;
+  }
+
+  if (!args.exact && !sourceContainsProgramme(args.source, args.programme)) {
+    return false;
+  }
+
+  const sourceText = normalizeMatchText(
+    [
+      args.source.title,
+      args.source.sourceLabel,
+      args.source.groundingText,
+      args.source.snippet,
+      args.source.type,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
+
+  if (args.intent === KNOWLEDGE_RETRIEVAL_INTENTS.jambRequirement) {
+    return sourceText.includes("jamb") || sourceText.includes("utme");
+  }
+
+  if (args.intent === KNOWLEDGE_RETRIEVAL_INTENTS.olevelRequirement) {
+    return sourceText.includes("olevel");
+  }
+
+  return (
+    sourceText.includes("jamb") ||
+    sourceText.includes("utme") ||
+    sourceText.includes("olevel")
+  );
+}
+
+function sourceContainsExactProgramme(
+  source: LlmSourceContext | undefined,
+  programme: string,
+) {
+  if (!source) {
+    return false;
+  }
+
+  const normalizedProgramme = normalizeMatchText(programme);
+  const sourceProgramme = extractSourceProgrammeName(source);
+
+  return sourceProgramme
+    ? normalizeMatchText(sourceProgramme) === normalizedProgramme
+    : false;
+}
+
 function isSourceRelevantToQuestion(question: string, source: LlmSourceContext) {
   const questionTerms = normalizeMatchText(question)
     .split(" ")
@@ -315,14 +412,31 @@ function sourceContainsProgramme(
     .every((term) => sourceText.includes(term));
 }
 
+function extractSourceProgrammeName(source: LlmSourceContext) {
+  const sourceText = [source.groundingText, source.snippet, source.title]
+    .filter(Boolean)
+    .join("\n");
+  const programmeMatch = /^Programme:\s*(.+)$/im.exec(sourceText);
+
+  if (programmeMatch?.[1]) {
+    return programmeMatch[1].trim();
+  }
+
+  const titleMatch = /^NSUK\s+(.+?)\s+Admission Subject Combination$/i.exec(
+    source.title.trim(),
+  );
+
+  return titleMatch?.[1]?.trim() ?? "";
+}
+
 function extractProgrammeCandidate(question: string) {
   const patterns = [
-    /\bstudy\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+at\s+|$)/,
-    /\bstudying\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+at\s+|$)/,
-    /\bfor\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+at\s+|$)/,
-    /\babout\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+at\s+|$)/,
-    /\bin\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+at\s+|$)/,
-    /\binto\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+at\s+|$)/,
+    /\bstudy\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+in\s+nsuk\b|\s+at\s+nsuk\b|\s+at\s+|$)/,
+    /\bstudying\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+in\s+nsuk\b|\s+at\s+nsuk\b|\s+at\s+|$)/,
+    /\bfor\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+in\s+nsuk\b|\s+at\s+nsuk\b|\s+at\s+|$)/,
+    /\babout\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+in\s+nsuk\b|\s+at\s+nsuk\b|\s+at\s+|$)/,
+    /\bin\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+in\s+nsuk\b|\s+at\s+nsuk\b|\s+at\s+|$)/,
+    /\binto\s+(.+?)(?:\s+with\s+|\s+using\s+|\s+in\s+nsuk\b|\s+at\s+nsuk\b|\s+at\s+|$)/,
   ];
 
   for (const pattern of patterns) {
@@ -341,6 +455,8 @@ function removeProgrammeTrailingClauses(value: string) {
   return value
     .replace(/\bwith\b.*$/, "")
     .replace(/\busing\b.*$/, "")
+    .replace(/\bin\s+nsuk\b.*$/, "")
+    .replace(/\bat\s+nsuk\b.*$/, "")
     .replace(/\bsubjects?\b.*$/, "")
     .replace(/\brequirements?\b.*$/, "")
     .trim();

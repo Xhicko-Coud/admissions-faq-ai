@@ -90,8 +90,10 @@ export const generateAnswer = action({
       },
       sources: selectedSources,
     };
+    const canUseRecentContext =
+      isContextualFollowUp && hasUsableConversationContext(conversationContext);
 
-    if (shouldUseOutOfDomainFallback(promptInput)) {
+    if (shouldUseOutOfDomainFallback(promptInput) && !canUseRecentContext) {
       return buildFallbackLlmAnswerResponse({
         input: promptInput,
         status: isContextualFollowUp
@@ -100,14 +102,17 @@ export const generateAnswer = action({
       });
     }
 
-    if (retrieval.status === KNOWLEDGE_RETRIEVAL_STATUSES.noMatch) {
+    if (
+      retrieval.status === KNOWLEDGE_RETRIEVAL_STATUSES.noMatch &&
+      !canUseRecentContext
+    ) {
       return buildFallbackLlmAnswerResponse({
         input: promptInput,
         status: LLM_RESPONSE_STATUSES.noMatch,
       });
     }
 
-    if (!hasUsableLlmContext(selectedSources)) {
+    if (!hasUsableLlmContext(selectedSources) && !canUseRecentContext) {
       return buildFallbackLlmAnswerResponse({
         input: promptInput,
         status: LLM_RESPONSE_STATUSES.insufficientContext,
@@ -119,7 +124,8 @@ export const generateAnswer = action({
         intent: retrieval.intent,
         question: retrieval.query,
         sources: selectedSources,
-      })
+      }) &&
+      !canUseRecentContext
     ) {
       return buildFallbackLlmAnswerResponse({
         input: promptInput,
@@ -129,7 +135,7 @@ export const generateAnswer = action({
 
     const context = formatLlmSourceContext(selectedSources);
 
-    if (!context) {
+    if (!context && !canUseRecentContext) {
       return buildFallbackLlmAnswerResponse({
         input: promptInput,
         status: LLM_RESPONSE_STATUSES.insufficientContext,
@@ -193,7 +199,7 @@ function sanitizeConversationContext(
   return (messages ?? [])
     .filter((message) => message.role === "user" || message.role === "assistant")
     .map((message) => ({
-      content: normalizePromptLine(message.content),
+      content: normalizePromptMessageContent(message.content),
       role: message.role,
     }))
     .filter((message) => message.content.length > 0)
@@ -217,8 +223,29 @@ function normalizeRetrievalQuery(value: string) {
   );
 }
 
-function normalizePromptLine(value: string) {
-  return value.trim().replace(/\s+/g, " ");
+function normalizePromptMessageContent(value: string) {
+  return value
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim().replace(/[^\S\n]+/g, " "))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function hasUsableConversationContext(
+  messages: LlmPromptInput["conversationContext"],
+) {
+  const contextText = messages
+    .map((message) => message.content)
+    .join("\n")
+    .toLowerCase();
+
+  return (
+    contextText.includes("jamb") &&
+    (contextText.includes("required") || contextText.includes("compulsory")) &&
+    (contextText.includes("optional") || contextText.includes("choose"))
+  );
 }
 
 function truncateText(value: string, maxLength: number) {
