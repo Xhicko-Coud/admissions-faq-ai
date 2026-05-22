@@ -55,11 +55,14 @@ export function buildNsukProgrammeListKnowledgePayload(args: {
   meta: NsukSeedMeta;
   records: readonly NsukProgrammeRequirementSeedRecord[];
 }): NsukKnowledgeEntrySeedPayload {
-  const programmes = getSortedUniqueProgrammes(args.records);
+  const publishedRecords = args.records.filter(
+    (record) => getNsukKnowledgeStatus(record) === KNOWLEDGE_ENTRY_STATUSES.published,
+  );
+  const programmes = getSortedUniqueProgrammes(publishedRecords);
   const programmeList = programmes.join(", ");
   const questionVariants = buildNsukProgrammeListQuestionVariants();
   const sourcePages = Array.from(
-    new Set(args.records.flatMap((record) => record.sourcePages)),
+    new Set(publishedRecords.flatMap((record) => record.sourcePages)),
   ).sort((first, second) => first - second);
 
   return {

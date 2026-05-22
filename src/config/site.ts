@@ -4,7 +4,7 @@ export const siteConfig = {
     "A conversational knowledge system for university admissions support.",
   description:
     "A conversational knowledge system for university admissions support.",
-  dashboardRoute: "/admin/dashboard",
+  dashboardRoute: "/admin/knowledge",
   loginRoute: "/login",
   publicAssistantRoute: "/",
 } as const;

@@ -155,24 +155,6 @@ export const resolveProgrammeAvailability = query({
       } as const;
     }
 
-    const programmeListEntry = programmeEntries.find((entry) =>
-      isProgrammeListEntry(entry),
-    );
-    const exactProgrammeFromList = programmeListEntry
-      ? findExactProgrammeInProgrammeList(
-          programmeListEntry.content ?? programmeListEntry.answer ?? "",
-          requestedProgramme,
-        )
-      : "";
-
-    if (exactProgrammeFromList) {
-      return {
-        programme: exactProgrammeFromList,
-        source: "programme_list",
-        status: "available",
-      } as const;
-    }
-
     return {
       programme: toDisplayProgrammeNameFromNormalized(requestedProgramme),
       status: "not_found",
@@ -253,10 +235,11 @@ export const retrievePublishedKnowledge = query({
       : isProgrammeAvailabilityQuestion && requestedProgramme
         ? []
       : results;
-    const matches = filterRelevantKnowledgeRetrievalMatches(
-      question,
-      rankedResults.map((entry) => toPublicKnowledgeRetrievalMatch(entry, intent)),
-    );
+    const rawMatches =
+      intent === KNOWLEDGE_RETRIEVAL_INTENTS.programmeList
+        ? await buildPublishedProgrammeListRetrievalMatches(ctx, rankedResults, intent)
+        : rankedResults.map((entry) => toPublicKnowledgeRetrievalMatch(entry, intent));
+    const matches = filterRelevantKnowledgeRetrievalMatches(question, rawMatches);
 
     return {
       intent,
@@ -270,6 +253,48 @@ export const retrievePublishedKnowledge = query({
     } as const;
   },
 });
+
+async function buildPublishedProgrammeListRetrievalMatches(
+  ctx: QueryCtx,
+  rankedResults: Doc<"knowledgeEntries">[],
+  intent: typeof KNOWLEDGE_RETRIEVAL_INTENTS.programmeList,
+) {
+  const programmeEntries = await ctx.db
+    .query("knowledgeEntries")
+    .withIndex("by_status_type", (lookup) =>
+      lookup
+        .eq("status", KNOWLEDGE_ENTRY_STATUSES.published)
+        .eq("type", KNOWLEDGE_ENTRY_TYPES.programme),
+    )
+    .collect();
+  const programmeListEntry =
+    rankedResults.find(isProgrammeListEntry) ??
+    programmeEntries.find(isProgrammeListEntry);
+
+  if (!programmeListEntry) {
+    return [];
+  }
+
+  const programmes = programmeEntries
+    .filter((entry) => !isProgrammeListEntry(entry))
+    .map((entry) => entry.metadata?.programme?.trim() ?? "")
+    .filter(Boolean)
+    .sort((first, second) => first.localeCompare(second));
+  const groundingText = [
+    `NSUK has ${programmes.length} undergraduate programmes available.`,
+    "Programmes:",
+    ...programmes.map((programme) => `- ${programme}`),
+  ].join("\n");
+  const match = toPublicKnowledgeRetrievalMatch(programmeListEntry, intent);
+
+  return [
+    {
+      ...match,
+      groundingText,
+      snippet: groundingText,
+    },
+  ];
+}
 
 async function findExactProgrammeRequirementEntry(
   ctx: QueryCtx,
@@ -322,26 +347,6 @@ function isProgrammeListEntry(entry: Doc<"knowledgeEntries">) {
     normalizedTitle.includes("undergraduate programmes list") ||
     normalizedProgramme.includes("undergraduate programmes list") ||
     normalizedProgramme.includes("programme list")
-  );
-}
-
-function findExactProgrammeInProgrammeList(
-  content: string,
-  requestedProgramme: string,
-) {
-  const normalizedRequestedProgramme = normalizeProgrammeNameForExactMatch(
-    requestedProgramme,
-  );
-  const lines = content
-    .split("\n")
-    .map((line) => line.trim().replace(/^[-*.·]\s+/, ""))
-    .filter(Boolean);
-
-  return (
-    lines.find(
-      (line) =>
-        normalizeProgrammeNameForExactMatch(line) === normalizedRequestedProgramme,
-    ) ?? ""
   );
 }
 

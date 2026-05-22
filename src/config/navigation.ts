@@ -26,6 +26,8 @@ export const adminNavigation: NavigationItem[] = [
     label: "Dashboard",
     description: "Admissions support overview",
     matchPaths: ["/admin/dashboard"],
+    disabled: true,
+    badge: "Coming soon",
   },
   {
     href: "/admin/knowledge",
